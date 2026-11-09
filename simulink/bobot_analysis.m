@@ -166,8 +166,16 @@ end
 
 function x = lsim_base(A, B, u, t, x0)
 % Time response of xdot = A x + B u(t) in plain MATLAB (no toolbox needed).
-% u is sampled at t and interpolated linearly between samples.
-    f = @(tau, x) A*x + B*interp1(t, u, tau, 'linear', 'extrap');
-    opts = odeset('RelTol', 1e-8, 'AbsTol', 1e-10, 'MaxStep', 0.002);
-    [~, x] = ode45(f, t, x0, opts);
+% u is a single input, sampled at t and straight-lined between samples; each
+% step is solved exactly with a matrix exponential, so it is fast and stable.
+    n = size(A, 1);
+    M = [A, B, zeros(n,1); zeros(1,n), 0, 1; zeros(1,n+2)];
+    x = zeros(numel(t), n);
+    x(1,:) = x0(:).';
+    for k = 1:numel(t)-1
+        dt = t(k+1) - t(k);
+        slope = (u(k+1) - u(k)) / dt;
+        z = expm(M*dt) * [x(k,:).'; u(k); slope];
+        x(k+1,:) = z(1:n).';
+    end
 end
