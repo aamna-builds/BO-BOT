@@ -56,8 +56,7 @@ saveas(gcf, 'results_matlab/01_poles.png');
 T = readtable('data/sim_initial_tilt.csv');
 ss = mean(T.pitch_deg(end-99:end));
 x0 = [0; (T.pitch_deg(1)-ss)*d2r; 0; 0; 0; 0];
-sysCl = ss_obj(Acl, Bcl);
-[~, ~, xl] = lsim(sysCl, zeros(size(T.t_s)), T.t_s, x0);
+xl = lsim_base(Acl, Bcl, zeros(size(T.t_s)), T.t_s, x0);
 figure('Position',[100 100 700 520]);
 subplot(2,1,1); plot(T.t_s, T.pitch_deg-ss, 'LineWidth', 1.6); hold on; plot(T.t_s, xl(:,2)*s2d, '--', 'LineWidth', 1.6);
 grid on; ylabel('pitch from rest (deg)'); legend('nonlinear simulator','linear model');
@@ -69,7 +68,7 @@ saveas(gcf, 'results_matlab/02_tilt_recovery_validation.png');
 %% 5. Figure 3: speed command, ramped at 0.6 m/s per second
 t2 = linspace(0, 4, 800)';
 vc = min(0.2, v_ramp*t2);
-[~, ~, xs] = lsim(sysCl, vc, t2, zeros(6,1));
+xs = lsim_base(Acl, Bcl, vc, t2, zeros(6,1));
 u_duty = xs(:,1:5)*Kz' + Kv*vc;
 S2 = readtable('data/sim_speed_step.csv');
 figure('Position',[100 100 700 640]);
@@ -142,7 +141,7 @@ for th0 = [3 8 14]
     [tn, zn] = ode45(@(t, z) bobot_nonlinear(t, z, 0, struct('mb',mb,'l',l,'e',e,'Iyy',Iyy,'Iwa',Iwa,'mw',mw,'Jm',Jm,'r',r,'g',g,'k1',k1,'ke',ke,'Vb',Vb, ...
         'kp',kp,'kd',kd,'kp_v',kp_v,'ki_v',ki_v,'kff',kff,'emf',emf,'tau_v',tau_v,'Td',Td,'cap',pwm_cap,'max_lean',max_lean)), [0 2.5], z0, opts);
     plot(tn, (zn(:,2) + e/l)*s2d, 'Color', cols(k,:), 'LineWidth', 1.6, 'DisplayName', sprintf('nonlinear, start %d deg', th0));
-    xl_ = lsim(sysCl, zeros(size(tt)), tt, [0; th0*d2r; 0; 0; 0; 0]);
+    xl_ = lsim_base(Acl, Bcl, zeros(size(tt)), tt, [0; th0*d2r; 0; 0; 0; 0]);
     plot(tt, xl_(:,2)*s2d, ':', 'Color', cols(k,:), 'LineWidth', 1.3, 'HandleVisibility', 'off');
 end
 grid on; legend; xlabel('time (s)'); ylabel('angle from balance point (deg)'); title('Solid: nonlinear model. Dotted: linear model');
@@ -165,6 +164,10 @@ function bad = chk(name, got, want, abs_tol, rel_tol)
     if ok, fprintf('  PASS  %s\n', name); bad = 0; else, fprintf('  FAIL  %s\n', name); bad = 1; end
 end
 
-function sys = ss_obj(A, B)
-    sys = ss(A, B, eye(size(A,1)), zeros(size(A,1), size(B,2)));
+function x = lsim_base(A, B, u, t, x0)
+% Time response of xdot = A x + B u(t) in plain MATLAB (no toolbox needed).
+% u is sampled at t and interpolated linearly between samples.
+    f = @(tau, x) A*x + B*interp1(t, u, tau, 'linear', 'extrap');
+    opts = odeset('RelTol', 1e-8, 'AbsTol', 1e-10, 'MaxStep', 0.002);
+    [~, x] = ode45(f, t, x0, opts);
 end
