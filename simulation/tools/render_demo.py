@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 HTML = sys.argv[1]            # path to simulation/web/index.html
 OUT = sys.argv[2]             # output mp4
 FRAMES_DIR = sys.argv[3]      # scratch dir for frames
-SECONDS = float(sys.argv[4]) if len(sys.argv) > 4 else 26.0
+SECONDS = float(sys.argv[4]) if len(sys.argv) > 4 else 30.0
 FPS = 30
 
 # (start_s, js to run)
@@ -25,6 +25,8 @@ EVENTS = [
     (18.0, "__bb.hold.down = true"),
     (21.0, "__bb.hold.down = false"),
     (23.0, "document.getElementById('xrayBtn').click()"),
+    (24.0, "__bb.sim.ctrl.fallen = true"),   # simulate a fall: dizzy face and stars
+    (27.0, "__bb.doReset()"),
 ]
 
 shutil.rmtree(FRAMES_DIR, ignore_errors=True)

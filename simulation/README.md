@@ -31,12 +31,12 @@ Click **Record** (top right of the 3D view), use the simulator, then click **Sto
 `.webm` video of the 3D view. Works in Chrome and Edge.
 
 ### Demo video
-`../media/videos/simulation-demo.mp4` shows a scripted run: balancing, driving, turning, pushes, and X-ray view.
+`../media/videos/simulation-demo.mp4` shows a scripted run: balancing, driving, turning, pushes, X-ray view, and a fall.
 To regenerate it:
 
 ```
 pip install playwright
-python simulation/tools/render_demo.py simulation/web/index.html media/videos/simulation-demo.mp4 /tmp/frames 26
+python simulation/tools/render_demo.py simulation/web/index.html media/videos/simulation-demo.mp4 /tmp/frames 30
 ```
 
 (`ffmpeg` and Chrome are required. The script steps the simulation frame by frame, so the video is smooth and

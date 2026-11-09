@@ -7,6 +7,7 @@
 | 2026-11-09 | Cover page redesigned. Concept sketches and design sheets added. Rough web simulator added with offline support, video recording and a demo video. |
 | 2026-11-09 | Parts list finalised and added to `components/`. CAD updated for the 1.3" OLED (face window, bezel, display module; buck converter moved 2 mm). |
 | 2026-11-09 | ESP32 firmware written (balance controller and OLED face ported from the simulator, hardware layer, serial tuning), pin map filled in, tests and CI added. Not yet run on hardware. |
+| 2026-11-09 | Simulator animation improved: rounded cat shell, pointed ears and bow tie that swing with the motion, tyre tread, contact shadow, paw for pushes, dizzy stars after a fall, smoother camera. Demo video and GIF re-rendered. Physics and controller unchanged. |
 
 ## To-do
 - [ ] Run CAD script in Fusion 360 and export `.f3d` / `.step` to `cad/exports/`

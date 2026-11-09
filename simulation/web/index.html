@@ -759,7 +759,7 @@ const trailMat = new THREE.LineBasicMaterial({ color: 0x2b8fd6 });
 const trailLine = new THREE.Line(trailGeo, trailMat); trailLine.frustumCulled = false; scene.add(trailLine);
 
 // robot: root (heading, on floor at axle height) > pitch group (body), wheels on root
-let root, pitchG, wheels = [], shellMeshes = [], innerMeshes = [], oledTex, arrow;
+let root, pitchG, wheels = [], shellMeshes = [], innerMeshes = [], oledTex;
 const oledCanvas = document.createElement("canvas"); oledCanvas.width = FW; oledCanvas.height = FH;
 const mm = v => v / 1000;
 const S2T = (x, y, z) => new THREE.Vector3(x, z, -y);   // sim body/world -> three
@@ -771,6 +771,40 @@ function boxMesh(c, s, color, opts = {}) {
   m.castShadow = true; m.receiveShadow = true;
   return m;
 }
+
+// Rounded box: a subdivided box whose vertices are pushed out to a radius from an inner box.
+function roundedBoxGeo(w, h, d, r, seg = 10) {
+  const g = new THREE.BoxGeometry(w, h, d, seg, seg, seg);
+  const pos = g.attributes.position, nor = g.attributes.normal, v = new THREE.Vector3(), inner = new THREE.Vector3();
+  const hx = w / 2 - r, hy = h / 2 - r, hz = d / 2 - r;
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    inner.set(Math.max(-hx, Math.min(hx, v.x)), Math.max(-hy, Math.min(hy, v.y)), Math.max(-hz, Math.min(hz, v.z)));
+    v.sub(inner);
+    if (v.lengthSq() > 1e-12) { v.normalize(); nor.setXYZ(i, v.x, v.y, v.z); v.multiplyScalar(r).add(inner); pos.setXYZ(i, v.x, v.y, v.z); }
+  }
+  return g;
+}
+function roundMesh(c, s, color, r) {
+  const m = new THREE.Mesh(roundedBoxGeo(mm(s[0]), mm(s[2]), mm(s[1]), mm(r)),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.78, metalness: 0 }));
+  m.position.copy(S2T(mm(c[0]), mm(c[1]), mm(c[2]))); m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+// Flat triangle (ears, bow-tie wings) with soft edges. pts are [lateral, up] in mm; depth runs front-to-back.
+function triPrism(pts, depth, color, rough = 0.8) {
+  const sh = new THREE.Shape(); pts.forEach(([a, b], i) => i ? sh.lineTo(mm(a), mm(b)) : sh.moveTo(mm(a), mm(b)));
+  const bev = mm(1.2);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: mm(depth) - 2 * bev, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 2 });
+  g.translate(0, 0, -(mm(depth) - 2 * bev) / 2); g.rotateY(PI / 2);   // extrusion axis -> forward (x)
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, roughness: rough }));
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+const clampN = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+// Secondary motion (ears, bow tie, dizzy stars) is render-only: it never feeds back into the simulation.
+let ears = [], bow = null, stars = null, paw = null, blob = null, animT = 0;
+const fx = { ear: 0, earV: 0, bow: 0, bowV: 0, lat: 0, latV: 0 };
 
 function buildRobot() {
   if (root) scene.remove(root);
@@ -787,11 +821,22 @@ function buildRobot() {
       continue;
     }
     if (grp === "shell") {
-      const parts = [];
-      if (name === "ears") for (const sy of [-1, 1]) parts.push(boxMesh([c[0], sy * 24, c[2]], [14, 14, 12], color));
-      else if (name === "bow_tie") { for (const sy of [-1, 1]) parts.push(boxMesh([c[0], sy * 8, c[2]], [s[0], 14, s[2]], color)); parts.push(boxMesh([c[0] + 1, 0, c[2]], [s[0], 6, 7], "#8f1426")); }
-      else parts.push(boxMesh(c, s, color, { rough: 0.8, transparent: true }));
-      for (const m of parts) { pitchG.add(m); shellMeshes.push(m); }
+      const add = o => { pitchG.add(o); o.traverse(q => { if (q.isMesh) shellMeshes.push(q); }); };
+      if (name === "ears") {
+        ears = [];
+        for (const sy of [-1, 1]) {
+          const piv = new THREE.Group(); piv.position.copy(S2T(mm(c[0]), mm(sy * 22), mm(c[2] - 6)));
+          const tri = triPrism([[-9.5, 0], [9.5, 0], [sy * -2, 20]], 9, color);
+          const inner = triPrism([[-5, 0.6], [5, 0.6], [sy * -1.2, 13]], 9.6, "#e58aa0");
+          piv.add(tri, inner); piv.userData.side = sy; piv.userData.base = sy * 0.12;
+          piv.rotation.x = piv.userData.base; add(piv); ears.push(piv);
+        }
+      } else if (name === "bow_tie") {
+        bow = new THREE.Group(); bow.position.copy(S2T(mm(c[0]), 0, mm(c[2])));
+        bow.add(triPrism([[0, 0], [15, 6.5], [15, -6.5]], s[0], color), triPrism([[0, 0], [-15, 6.5], [-15, -6.5]], s[0], color));
+        const knot = roundMesh([1, 0, 0], [s[0] + 1, 6, 7.5], "#8f1426", 1.6); knot.position.set(mm(1), 0, 0); bow.add(knot);
+        add(bow);
+      } else add(roundMesh(c, s, color, name === "shell_upper" ? 10 : 5));
       continue;
     }
     const m = boxMesh(c, s, color, { metal: grp === "motor" ? 0.5 : 0 });
@@ -820,10 +865,39 @@ function buildRobot() {
       const sp = new THREE.Mesh(new THREE.BoxGeometry(p.r * 1.3, 0.0016, 0.0006), new THREE.MeshStandardMaterial({ color: 0x9a9aa0 }));
       sp.position.z = -side * (p.wheel.width / 2 + 0.0006); sp.rotation.z = k * PI / 3; spin.add(sp);
     }
+    const lugMat = new THREE.MeshStandardMaterial({ color: 0x1b1b1e, roughness: 0.95 });
+    for (let k = 0; k < 24; k++) {
+      const arm = new THREE.Group(); arm.rotation.z = k * 2 * PI / 24;
+      const lug = new THREE.Mesh(new THREE.BoxGeometry(0.0034, 0.0016, p.wheel.width * 0.94), lugMat);
+      lug.position.y = p.r + 0.0003; arm.add(lug); spin.add(arm);
+    }
     wheels.push(spin);
   }
-  arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(-0.11, p.l + 0.04, 0), 0.07, 0xd9442f, 0.022, 0.014);
-  arrow.visible = false; pitchG.add(arrow);
+  // cartoon paw that does the pushing (visual only)
+  paw = new THREE.Group();
+  const pawMat = new THREE.MeshStandardMaterial({ color: 0xf6e9dc, roughness: 0.8, transparent: true });
+  const beanMat = new THREE.MeshStandardMaterial({ color: 0xe58aa0, roughness: 0.7, transparent: true });
+  const pad = new THREE.Mesh(new THREE.SphereGeometry(0.012, 20, 14), pawMat); pad.scale.set(0.8, 1, 1);
+  const armM = new THREE.Mesh(new THREE.CylinderGeometry(0.0055, 0.0065, 0.10, 14), pawMat); armM.rotation.z = PI / 2; armM.position.x = -0.05;
+  paw.add(pad, armM);
+  for (const [dy, dz, r] of [[0, 0, 0.0052], [0.0062, 0.0062, 0.0027], [0.0062, -0.0062, 0.0027], [-0.0068, 0.0, 0.0027]]) {
+    const bean = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), beanMat); bean.position.set(0.0085, dy * 0.9, dz); paw.add(bean);
+  }
+  paw.traverse(q => { if (q.isMesh) { q.castShadow = true; } });
+  paw.visible = false; root.add(paw);
+  // soft contact shadow under the wheels / body
+  const bc = document.createElement("canvas"); bc.width = bc.height = 64; const bg = bc.getContext("2d");
+  const gr = bg.createRadialGradient(32, 32, 2, 32, 32, 31); gr.addColorStop(0, "rgba(0,0,0,0.55)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+  bg.fillStyle = gr; bg.fillRect(0, 0, 64, 64);
+  blob = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.16), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(bc), transparent: true, depthWrite: false }));
+  blob.rotation.x = -PI / 2; blob.position.y = -p.r + 0.0009; blob.renderOrder = 1; root.add(blob);
+  // little stars that circle the head when it has fallen over
+  stars = new THREE.Group(); stars.position.set(0, hw.shell ? 0.125 : 0.085, 0);
+  for (let k = 0; k < 3; k++) {
+    const st = new THREE.Mesh(new THREE.OctahedronGeometry(0.006), new THREE.MeshBasicMaterial({ color: 0xffc83d }));
+    st.userData.k = k; stars.add(st);
+  }
+  stars.visible = false; pitchG.add(stars);
   applyXray();
   $("massNote").textContent = `${(p.total_mass * 1000).toFixed(0)} g total · centre of mass ${(p.l * 1000).toFixed(1)} mm above the axle · body hits the floor at ${(p.fall_fwd / D2R).toFixed(0)}°`;
 }
@@ -832,16 +906,57 @@ function applyXray() {
   for (const m of innerMeshes) m.visible = !hw.shell || xray;
 }
 
+// ---------------- secondary motion (render only) ----------------
+// Ears and bow tie are springs that lag the body, so they swing when it leans, accelerates or is poked.
+function stepFx(dt) {
+  const x = sim.plant.x, phi = -x[ITH];
+  const n = Math.max(1, Math.ceil(dt / 0.004)), h = dt / n;
+  for (let i = 0; i < n; i++) {
+    // absolute orientation of each part chases the body's orientation through a damped spring
+    fx.earV += (-900 * (fx.ear - phi) - 14 * fx.earV) * h; fx.ear += fx.earV * h;
+    fx.bowV += (-500 * (fx.bow - phi) - 9 * fx.bowV) * h; fx.bow += fx.bowV * h;
+    fx.latV += (-700 * fx.lat - 11 * fx.latV) * h; fx.lat += fx.latV * h;
+  }
+  // steering flicks the ears sideways
+  fx.latV += -x[IPSID] * 0.02;
+  fx.latV = clampN(fx.latV, -12, 12); fx.lat = clampN(fx.lat, -0.5, 0.5);
+}
+function applyFx() {
+  const x = sim.plant.x, phi = -x[ITH];
+  const er = clampN(fx.ear - phi, -0.6, 0.6) * 0.8, br = clampN(fx.bow - phi, -0.6, 0.6) * 0.9;
+  for (const e of ears) { e.rotation.z = er; e.rotation.x = e.userData.base + e.userData.side * clampN(fx.lat, -0.5, 0.5) * 0.5; }
+  if (bow) { bow.rotation.z = br * 0.6; bow.rotation.y = fx.lat * 0.35; }
+  if (stars) {
+    stars.visible = sim.fallen;
+    if (stars.visible) stars.children.forEach(st => { const a = animT * 4 + st.userData.k * 2 * PI / 3; st.position.set(Math.cos(a) * 0.03, Math.sin(a * 2) * 0.004, Math.sin(a) * 0.03); st.rotation.y = a * 3; });
+  }
+  if (paw) {
+    const u = 1 - pushVis / 0.4;
+    paw.visible = pushVis > 0;
+    if (paw.visible) {
+      const ease = 1 - Math.pow(1 - u, 3), contact = hw.shell ? 0.043 : 0.036;
+      paw.position.set(-pushDir * (contact + 0.13 * ease), sim.p.l + 0.04, 0); paw.rotation.y = pushDir > 0 ? 0 : PI;
+      paw.traverse(q => { if (q.isMesh) q.material.opacity = clampN(1.6 * (1 - u), 0, 1); });
+    }
+  }
+  if (blob) { const lean = Math.abs(x[ITH]); blob.position.x = Math.sin(x[ITH]) * sim.p.l * 0.5; blob.material.opacity = clampN(0.9 - lean * 0.8, 0.3, 0.9); }
+}
+
 // ---------------- camera ----------------
 const cam = { mode: 0, az: 40 * D2R, el: 18 * D2R, dist: 0.42, tgt: new THREE.Vector3(0, 0.05, 0) };
 function updateCamera() {
   const x = sim.plant.x;
   if (cam.mode === 0) { const want = x[IPSI] + 40 * D2R; const d = ((want - cam.az + PI) % (2 * PI) + 2 * PI) % (2 * PI) - PI; cam.az += d * 0.06; }
   else if (cam.mode === 2) cam.az = x[IPSI] - PI / 2;
-  const t = S2T(x[IX], x[IY], 0.05); cam.tgt.lerp(t, 0.15);
+  const ahead = cam.mode === 1 ? 0 : clampN(sim.ctrl.v, -0.6, 0.6) * 0.12;   // look slightly ahead of where it is going
+  const t = S2T(x[IX] + Math.cos(x[IPSI]) * ahead, x[IY] + Math.sin(x[IPSI]) * ahead, 0.05); cam.tgt.lerp(t, 0.15);
+  const fov = 42 + Math.min(6, Math.abs(sim.ctrl.v) * 12);
+  if (Math.abs(camera.fov - fov) > 0.01) { camera.fov += (fov - camera.fov) * 0.1; camera.updateProjectionMatrix(); }
   const ce = Math.cos(cam.el);
   const off = S2T(cam.dist * ce * Math.cos(cam.az), cam.dist * ce * Math.sin(cam.az), cam.dist * Math.sin(cam.el));
-  camera.position.copy(cam.tgt).add(off); camera.lookAt(cam.tgt);
+  camera.position.copy(cam.tgt).add(off);
+  if (pushVis > 0) { const k = 0.006 * pushVis / 0.4; camera.position.x += Math.sin(animT * 90) * k; camera.position.y += Math.cos(animT * 77) * k; }   // small jolt when poked
+  camera.lookAt(cam.tgt);
   sun.position.copy(cam.tgt).add(new THREE.Vector3(-0.5, 1.1, 0.6)); sun.target.position.copy(cam.tgt);
 }
 function setCam(m) { cam.mode = m; document.querySelectorAll(".camsel button").forEach(b => b.classList.toggle("on", +b.dataset.cam === m)); }
@@ -1017,13 +1132,13 @@ function step(dtReal) {
     if (!lastP || Math.hypot(lastP[0] - x[IX], lastP[1] - x[IY]) > 0.01) { trail.push([x[IX], x[IY]]); if (trail.length > 600) trail.shift(); }
     face.update(dt, { angle: c.angle, rate: x[ITHD] / D2R, v_cmd: c.v_cmd, yaw_cmd: c.yaw_cmd, fallen: sim.fallen, low_batt: c.low_batt, pushed: pushVis > 0.35 });
     pushVis = Math.max(0, pushVis - dt);
+    animT += dt; stepFx(dt);
   }
   // pose
   const x = sim.plant.x;
   root.position.copy(S2T(x[IX], x[IY], sim.p.r)); root.rotation.y = x[IPSI]; pitchG.rotation.z = -x[ITH];
   wheels[0].rotation.z = -x[IAL]; wheels[1].rotation.z = -x[IAR];
-  arrow.visible = pushVis > 0;
-  if (arrow.visible) { arrow.setDirection(new THREE.Vector3(pushDir, 0, 0)); arrow.position.set(-pushDir * 0.11, sim.p.l + 0.04, 0); }
+  applyFx();
   const pos = trailGeo.attributes.position;
   trail.forEach(([a, b], i) => pos.setXYZ(i, a, 0.0006, -b)); pos.needsUpdate = true; trailGeo.setDrawRange(0, trail.length);
   updateCamera();
