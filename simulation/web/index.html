@@ -1,0 +1,1070 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Balance Bot Bench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* Layout: a test bench — 3D rig on the left, instrument rack on the right; on phones the rig sits on top with a thumb pad. */
+:root {
+  --bg: #e9edf1;          /* bench */
+  --panel: #f7f9fb;       /* instrument rack */
+  --card: #ffffff;
+  --ink: #1b232c;
+  --muted: #5d6b79;
+  --line: #d3dae1;
+  --pla: #d4692a;         /* printed-part orange, the accent */
+  --pla-ink: #ffffff;
+  --oled: #46b4f0;        /* SH1106 blue */
+  --oled-bg: #0b1016;
+  --trace-a: #d4692a; --trace-b: #2b8fd6; --trace-c: #8a5cd1;
+  --good: #23885a; --warn: #b7791f; --bad: #c8382e;
+  --sky: #dce4ec; --floor-a: #bfb6a4; --floor-b: #b1a792;
+  --pad: rgba(255,255,255,.78); --pad-ink: #1b232c;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12171d; --panel: #171d24; --card: #1d252e; --ink: #e4e9ee; --muted: #93a1af; --line: #2c3743;
+  --pla: #ec8a4a; --pla-ink: #1a0f08; --oled: #5cc4ff; --oled-bg: #05080c;
+  --trace-a: #f09a5c; --trace-b: #5cb8f5; --trace-c: #b08cf0;
+  --good: #49c189; --warn: #e3a64a; --bad: #f06a5e;
+  --sky: #1b2530; --floor-a: #3a3f45; --floor-b: #33383e; --pad: rgba(23,29,36,.82); --pad-ink: #e4e9ee;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12171d; --panel: #171d24; --card: #1d252e; --ink: #e4e9ee; --muted: #93a1af; --line: #2c3743;
+  --pla: #ec8a4a; --pla-ink: #1a0f08; --oled: #5cc4ff; --oled-bg: #05080c;
+  --trace-a: #f09a5c; --trace-b: #5cb8f5; --trace-c: #b08cf0;
+  --good: #49c189; --warn: #e3a64a; --bad: #f06a5e;
+  --sky: #1b2530; --floor-a: #3a3f45; --floor-b: #33383e; --pad: rgba(23,29,36,.82); --pad-ink: #e4e9ee;
+  color-scheme: dark; }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
+* { box-sizing: border-box; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--pla); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 380px; grid-template-rows: auto minmax(0, 1fr); height: 100%; }
+header.top { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line); background: var(--panel); }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 19px; letter-spacing: .01em; text-wrap: balance; }
+.brand small { font-weight: 500; color: var(--muted); font-size: 13px; margin-left: 8px; letter-spacing: .02em; }
+.chip { font-family: var(--f-display); font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px; border: 1px solid currentColor; }
+.chip.good { color: var(--good); } .chip.bad { color: var(--bad); } .chip.warn { color: var(--warn); }
+.top .spacer { flex: 1; }
+.clock { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--sky); }
+#view { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#view:active { cursor: grabbing; }
+.hint { position: absolute; top: 10px; left: max(12px, env(safe-area-inset-left, 0px)); font-family: var(--f-mono); font-size: 11.5px;
+  color: var(--muted); background: var(--pad); padding: 6px 9px; border-radius: 6px; line-height: 1.6; max-width: calc(100% - 24px); }
+.hint kbd { font-family: var(--f-mono); font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--card); color: var(--ink); }
+.camsel { position: absolute; top: 10px; right: max(12px, env(safe-area-inset-right, 0px)); display: flex; gap: 4px; }
+.recwrap { position: absolute; top: 48px; right: max(12px, env(safe-area-inset-right, 0px)); }
+.recwrap .btn { background: var(--pad); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-family: var(--f-mono); font-size: 12px; }
+.recwrap .btn.on { background: var(--bad); border-color: var(--bad); color: #fff; }
+
+.pad { position: absolute; bottom: max(12px, env(safe-area-inset-bottom, 0px)); display: grid; gap: 6px; user-select: none; -webkit-user-select: none; }
+.pad.drive { left: max(12px, env(safe-area-inset-left, 0px)); grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(2, 52px); }
+.pad.actions { right: max(12px, env(safe-area-inset-right, 0px)); grid-template-columns: repeat(2, auto); }
+.pbtn { touch-action: none; border: 1px solid var(--line); background: var(--pad); color: var(--pad-ink); border-radius: 12px;
+  font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: .03em; display: grid; place-items: center;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); cursor: pointer; min-height: 44px; padding: 0 12px; }
+.pbtn svg { width: 22px; height: 22px; fill: currentColor; }
+.pbtn.on, .pbtn:active { background: var(--pla); color: var(--pla-ink); border-color: var(--pla); }
+.pad.drive .up { grid-column: 2; grid-row: 1; } .pad.drive .left { grid-column: 1; grid-row: 2; }
+.pad.drive .down { grid-column: 2; grid-row: 2; } .pad.drive .right { grid-column: 3; grid-row: 2; }
+.pad.drive .fast { grid-column: 1; grid-row: 1; font-size: 11px; padding: 0; }
+.pad.actions .wide { grid-column: 1 / -1; }
+
+aside.rack { background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; min-height: 0;
+  padding-block: 14px 24px; padding-left: 16px; padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 16px; }
+.sec h2 { font-family: var(--f-display); font-weight: 600; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  margin: 0 0 8px; display: flex; align-items: baseline; gap: 8px; }
+.sec h2 .sub { font-family: var(--f-body); text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
+
+.facebox { display: grid; grid-template-columns: 172px minmax(0, 1fr); gap: 12px; align-items: start; }
+.bezel { background: #111; border-radius: 8px; padding: 9px 8px 18px; position: relative; box-shadow: inset 0 0 0 1px #2a2a2a; }
+.bezel::after { content: "SH1106 · 128×64"; position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-family: var(--f-mono); font-size: 9px; color: #6c7680; letter-spacing: .05em; }
+#oled { display: block; width: 156px; height: 78px; image-rendering: pixelated; background: var(--oled-bg); border-radius: 2px; }
+.readouts { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 2px; font-family: var(--f-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.readouts dt { color: var(--muted); } .readouts dd { margin: 0; text-align: right; }
+
+.chart { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px 4px; }
+.chart + .chart { margin-top: 8px; }
+.chart .ch { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--muted); font-family: var(--f-display); letter-spacing: .03em; flex-wrap: wrap; }
+.chart .legend { display: flex; gap: 10px; }
+.chart .legend i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+.chart canvas { display: block; width: 100%; height: 74px; }
+
+.gains { display: grid; gap: 7px; }
+.g { display: grid; grid-template-columns: 54px minmax(0, 1fr) 62px; gap: 8px; align-items: center; }
+.g label { font-family: var(--f-mono); font-size: 12.5px; }
+.g output { font-family: var(--f-mono); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.g .unit { grid-column: 2 / -1; font-size: 11px; color: var(--muted); margin-top: -6px; }
+input[type=range] { width: 100%; accent-color: var(--pla); }
+.row { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 6px 11px; cursor: pointer; font-size: 13px; }
+.btn:hover { border-color: var(--pla); }
+.btn.on { background: var(--pla); color: var(--pla-ink); border-color: var(--pla); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--card); padding: 6px 10px; cursor: pointer; font-family: var(--f-mono); font-size: 12px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--pla); color: var(--pla-ink); }
+.hw { display: grid; gap: 9px; }
+.hw .line { display: grid; grid-template-columns: 112px minmax(0, 1fr) 54px; gap: 8px; align-items: center; font-size: 13px; }
+.hw .line output { font-family: var(--f-mono); font-size: 12.5px; text-align: right; }
+select { border: 1px solid var(--line); background: var(--card); border-radius: 6px; padding: 4px 6px; width: 100%; }
+.diag { font-family: var(--f-mono); font-size: 12px; display: grid; grid-template-columns: 1fr auto; row-gap: 2px; font-variant-numeric: tabular-nums; }
+.diag .bad { color: var(--bad); } .diag .warn { color: var(--warn); }
+.tips { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; display: grid; gap: 2px; }
+.note { color: var(--muted); font-size: 12px; margin: 0; }
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; height: auto; }
+  .stage { height: min(62vh, 460px); min-height: 320px; }
+  aside.rack { border-left: 0; border-top: 1px solid var(--line); overflow: visible; padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+  .hint { display: none; }
+  .brand small { display: block; margin-left: 0; }
+  .pad.drive { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(2, 50px); }
+}
+@media (max-width: 380px) { .facebox { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">Balance Bot Bench<small>ESP32 · GA12-N20 6 V 300 rpm · 34 mm wheels · 2S 1000 mAh</small></div>
+    <span id="status" class="chip good">Balancing</span>
+    <span class="spacer"></span>
+    <span class="clock" id="clock">t 0.0 s · ×1</span>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="view" aria-label="3D view of the robot. Drag to orbit, scroll or pinch to zoom."></canvas>
+    <div class="hint" id="hint">
+      <kbd>↑</kbd><kbd>↓</kbd> drive (<kbd>Shift</kbd> faster) · <kbd>←</kbd><kbd>→</kbd> turn<br>
+      <kbd>X</kbd>/<kbd>Z</kbd> push fwd/back · <kbd>R</kbd> pick up · <kbd>S</kbd> shell · <kbd>P</kbd> pause
+    </div>
+    <div class="camsel seg" role="group" aria-label="Camera">
+      <button data-cam="0" class="on">Chase</button><button data-cam="1">Orbit</button><button data-cam="2">Side</button>
+    </div>
+    <div class="recwrap"><button class="btn" id="recBtn" title="Record the 3D view and download it as a .webm video">&#9679; Record</button></div>
+    <div class="pad drive" aria-label="Drive pad">
+      <button class="pbtn fast" id="fastBtn" aria-pressed="false">FAST</button>
+      <button class="pbtn up" data-hold="up" aria-label="Drive forward"><svg viewBox="0 0 24 24"><path d="M12 5l7 9H5z"/></svg></button>
+      <button class="pbtn left" data-hold="left" aria-label="Turn left"><svg viewBox="0 0 24 24"><path d="M6 12l9-7v14z"/></svg></button>
+      <button class="pbtn down" data-hold="down" aria-label="Drive backward"><svg viewBox="0 0 24 24"><path d="M12 19l-7-9h14z"/></svg></button>
+      <button class="pbtn right" data-hold="right" aria-label="Turn right"><svg viewBox="0 0 24 24"><path d="M18 12l-9 7V5z"/></svg></button>
+    </div>
+    <div class="pad actions">
+      <button class="pbtn" id="pushBack" aria-label="Push backward">◀ Push</button>
+      <button class="pbtn" id="pushFwd" aria-label="Push forward">Push ▶</button>
+      <button class="pbtn wide" id="resetBtn">Pick up &amp; release</button>
+    </div>
+  </main>
+
+  <aside class="rack">
+    <section class="sec">
+      <h2>Face &amp; readouts</h2>
+      <div class="facebox">
+        <div class="bezel"><canvas id="oled" width="128" height="64" aria-label="OLED face"></canvas></div>
+        <dl class="readouts" id="readouts"></dl>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>Live traces <span class="sub">last 6 s, 200 Hz firmware log</span></h2>
+      <div class="chart"><div class="ch"><span>Pitch, deg</span><span class="legend"><span><i style="background:var(--trace-a)"></i>true</span><span><i style="background:var(--trace-b)"></i>MPU estimate</span><span><i style="background:var(--trace-c)"></i>target</span></span></div><canvas id="c1"></canvas></div>
+      <div class="chart"><div class="ch"><span>Motor PWM, counts of 255</span><span class="legend"><span><i style="background:var(--trace-a)"></i>left</span><span><i style="background:var(--trace-b)"></i>right</span></span></div><canvas id="c2"></canvas></div>
+      <div class="chart"><div class="ch"><span>Speed, m/s</span><span class="legend"><span><i style="background:var(--trace-a)"></i>actual</span><span><i style="background:var(--trace-b)"></i>command</span></span></div><canvas id="c3"></canvas></div>
+    </section>
+
+    <section class="sec">
+      <h2>Firmware gains <span class="sub">live, same units as the ESP32 code</span></h2>
+      <div class="gains" id="gains"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="gTuned">Tuned defaults</button>
+        <button class="btn" id="gLqr">Textbook LQR (try it)</button>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>Hardware</h2>
+      <div class="hw">
+        <div class="row">
+          <button class="btn" id="shellBtn" aria-pressed="false">Shell</button>
+          <button class="btn" id="xrayBtn" aria-pressed="false">X-ray</button>
+          <button class="btn" id="drainBtn">Battery to 15 %</button>
+        </div>
+        <div class="line"><label for="hwBacklash">Gear backlash</label><input type="range" id="hwBacklash" min="0" max="4" step="0.25" value="1.5"><output id="oBacklash">1.5°</output></div>
+        <div class="line"><label for="hwMpu">MPU-6050 on</label><select id="hwMpu"><option value="0.010">Deck 1, near axle (10 mm)</option><option value="0.0275" selected>Deck 2 (27.5 mm)</option><option value="0.060">Top deck (60 mm)</option></select><span></span></div>
+        <div class="line"><label for="hwTilt">MPU tilt error</label><input type="range" id="hwTilt" min="-4" max="4" step="0.25" value="1"><output id="oTilt">1.0°</output></div>
+        <div class="line"><label for="hwPayload">Extra weight</label><input type="range" id="hwPayload" min="0" max="100" step="5" value="0"><output id="oPayload">0 g</output></div>
+        <p class="note" id="massNote"></p>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>Simulation</h2>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Simulation speed" id="speedSeg">
+          <button data-sp="0.25">¼×</button><button data-sp="0.5">½×</button><button data-sp="1" class="on">1×</button><button data-sp="2">2×</button>
+        </div>
+        <button class="btn" id="pauseBtn">Pause</button>
+      </div>
+      <div class="diag" id="diag" style="margin-top:10px"></div>
+      <ul class="tips">
+        <li>Creeps away while standing: adjust <b>trim</b>.</li>
+        <li>PWM trace buzzes: lower <b>kd</b> (gear backlash).</li>
+        <li>Slow sway back and forth: lower <b>kp_v</b> or <b>ki_v</b>.</li>
+        <li>Falls when pushed: raise <b>kp</b> a little.</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+// ===================================================================
+// Balance-bot simulation core (JavaScript port of balancebot_sim/*.py)
+// No DOM here: params, equations of motion, motors + gearbox backlash,
+// DRV8833, LiPo, MPU-6050, encoders, battery ADC, firmware, OLED face.
+// ===================================================================
+"use strict";
+const BB = (() => {
+const G0 = 9.81, PI = Math.PI;
+const { sin, cos, tanh, exp, sqrt, abs, max, min, round, floor, atan2 } = Math;
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+
+// ---------- seeded RNG (mulberry32 + Box-Muller) ----------
+function rng(seed) {
+  let a = seed >>> 0, spare = null;
+  const u = () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  return { u, gauss(m, s) {
+    if (spare !== null) { const v = spare; spare = null; return m + s * v; }
+    let x, y, r; do { x = 2 * u() - 1; y = 2 * u() - 1; r = x * x + y * y; } while (r >= 1 || r === 0);
+    const f = sqrt(-2 * Math.log(r) / r); spare = y * f; return m + s * x * f; } };
+}
+
+// ---------- 1. component table (g, mm, body frame: x fwd, y left, z up, origin = axle) ----------
+const COMPONENTS = [
+  ["motor_L", 11.5, [0, 18, 0], [12, 32, 10], "#9a9aa4", "motor"],
+  ["motor_R", 11.5, [0, -18, 0], [12, 32, 10], "#9a9aa4", "motor"],
+  ["motor_clamps", 10.0, [0, 0, 1.0], [16, 64, 12], "#e8893c", "frame"],
+  ["deck1", 9.0, [0, 0, 6.5], [45, 68, 3], "#e8893c", "frame"],
+  ["battery", 54.0, [0, 0, 14.0], [37, 68, 12], "#3c78c8", "power"],
+  ["xt30_leads", 4.0, [-20, 30, 14], [8, 10, 8], "#e6c828", "power"],
+  ["pillars_1", 6.0, [0, 0, 15.5], [40, 66, 15], "#dcdce1", "posts"],
+  ["deck2", 9.0, [0, 0, 24.5], [50, 80, 3], "#e8893c", "frame"],
+  ["esp32", 9.5, [6, 0, 32.0], [28, 51, 11], "#2a2a30", "elec"],
+  ["mpu6050", 2.0, [-16, 0, 27.5], [16, 21, 3], "#1e5aaa", "mpu"],
+  ["drv8833", 2.0, [-16, 20, 28.0], [16, 18, 4], "#c82828", "elec"],
+  ["buck_5v", 5.0, [-16, -21, 30.0], [17, 26, 8], "#1e6e3c", "elec"],
+  ["pillars_2", 6.0, [0, 0, 38.5], [44, 74, 25], "#dcdce1", "posts"],
+  ["deck3", 9.0, [0, 0, 52.5], [50, 80, 3], "#e8893c", "frame"],
+  ["breadboard", 9.0, [-5, 0, 58.8], [35, 47, 9.5], "#ebebeb", "elec"],
+  ["oled_mount", 6.0, [20, 0, 70.0], [6, 40, 36], "#e8893c", "frame"],
+  ["oled", 6.0, [25, 0, 72.0], [4, 35.4, 33.5], "#101216", "oled"],
+  ["jumper_wires", 15.0, [0, 0, 35.0], [40, 60, 40], "#c83cc8", "hidden"],
+  ["m3_screws", 8.0, [0, 0, 25.0], [44, 74, 50], "#b4b4b4", "hidden"],
+  ["shell_lower", 10.0, [0, 0, 12.0], [62, 68, 16], "#f3e6d4", "shell"],
+  ["shell_upper", 48.0, [0, 0, 59.0], [62, 86, 78], "#f3e6d4", "shell"],
+  ["ears", 5.0, [0, 0, 104.0], [20, 70, 14], "#f4c4cf", "shell"],
+  ["bow_tie", 3.0, [33, 0, 30.0], [4, 30, 12], "#d22a44", "shell"],
+];
+
+const LIPO_OCV = [[0, 3.27], [.05, 3.61], [.1, 3.69], [.15, 3.71], [.2, 3.73], [.25, 3.75], [.3, 3.77],
+  [.35, 3.79], [.4, 3.80], [.45, 3.82], [.5, 3.84], [.55, 3.85], [.6, 3.87], [.65, 3.91], [.7, 3.95],
+  [.75, 3.98], [.8, 4.02], [.85, 4.08], [.9, 4.11], [.95, 4.15], [1, 4.20]];
+function lipoOcv(soc, cells) {
+  soc = clamp(soc, 0, 1);
+  for (let i = 0; i < LIPO_OCV.length - 1; i++) {
+    const [s0, v0] = LIPO_OCV[i], [s1, v1] = LIPO_OCV[i + 1];
+    if (soc <= s1) return cells * (v0 + (v1 - v0) * (soc - s0) / (s1 - s0));
+  }
+  return cells * 4.2;
+}
+
+// ---------- parameters ----------
+function makeParams(o = {}) {
+  const p = {
+    shell: !!o.shell, g: G0, payload: o.payload || 0,
+    wheel: { radius: 0.017, width: 0.0065, mass: 0.0032, track: 0.078, mu: 0.8, c_rr: 0.015 },
+    motor: { V_rated: 6, rpm_noload: 300, I_noload: 0.04, I_stall: 0.55, T_stall_kgcm: 0.70, gear: 50,
+      ppr: 7, quad: 4, J_rotor: 2.5e-8, stiction_ratio: 1.6, coulomb_frac: 0.6,
+      backlash_deg: o.backlash_deg ?? 1.5, gear_stiffness: 3.0, gear_damping_ratio: 0.25,
+      mismatch_kt: 0.96, mismatch_R: 1.04, mismatch_fric: 1.2 },
+    power: { cells: 2, capacity_mAh: 1000, soc0: o.soc0 ?? 0.95, R_internal: 0.030, R_wiring: 0.015,
+      drv_rds_on: 0.36, drv_ocp: 2.0, logic_power_W: 1.0, divider_top: 10000, divider_bottom: 4700,
+      adc_gain_error: 1.02, v_cutoff: 6.6 },
+    sensor: { mpu_pos: o.mpu_pos || [-0.016, 0, 0.0275], mount_error_deg: o.mount_error_deg ?? 1.0,
+      dlpf_hz: 44, accel_range_g: 4, gyro_range_dps: 500, accel_noise_density: 400e-6 * G0,
+      gyro_noise_density: 0.005 * PI / 180, gyro_bias_dps: 0.3, gyro_bias_walk: 0.002, vibration_g: 0.03,
+      seed: o.seed ?? 1 },
+    timing: { physics_dt: 0.0005, control_hz: o.control_hz ?? 200, output_delay: 0.001, pwm_bits: 8 },
+  };
+  const w = p.wheel;
+  w.Iwa = 0.5 * 0.0020 * (0.017 ** 2 + 0.013 ** 2) + 0.5 * 0.0012 * 0.008 ** 2;
+  w.Iwt = 0.5 * w.Iwa + w.mass * w.width ** 2 / 12;
+  const m = p.motor;
+  m.R = m.V_rated / m.I_stall;
+  const wnl = m.rpm_noload * m.gear * 2 * PI / 60;
+  m.Ke = (m.V_rated - m.I_noload * m.R) / wnl; m.Kt = m.Ke;
+  m.eta = m.T_stall_kgcm * 0.0980665 / (m.gear * m.Kt * m.I_stall);
+  m.J_out = m.J_rotor * m.gear ** 2;
+  const Tf = m.eta * m.gear * m.Kt * m.I_noload;
+  m.T_coulomb_out = m.coulomb_frac * Tf;
+  m.b_visc_out = (1 - m.coulomb_frac) * Tf / (m.rpm_noload * 2 * PI / 60);
+  m.counts_per_wheel_rev = m.ppr * m.quad * m.gear;
+
+  // active components + mass properties
+  p.comps = COMPONENTS.filter(c => c[5] !== "shell" || p.shell).map(c => c.slice());
+  if (p.payload > 0) p.comps.push(["payload", p.payload, [0, 0, 69], [20, 20, 10], "#6e6e6e", "payload"]);
+  const comps = p.comps;
+  const M = comps.reduce((s, c) => s + c[1], 0) / 1000;
+  const cx = comps.reduce((s, c) => s + c[1] * c[2][0], 0) / 1000 / M / 1000;
+  const cz = comps.reduce((s, c) => s + c[1] * c[2][2], 0) / 1000 / M / 1000;
+  let Ixx = 0, Iyy = 0, Izz = 0, Ixz = 0;
+  for (const [name, mg, [x0, y0, z0], [dx0, dy0, dz0]] of comps) {
+    const mk = mg / 1000, x = x0 / 1000 - cx, y = y0 / 1000, z = z0 / 1000 - cz;
+    const dx = dx0 / 1000, dy = dy0 / 1000, dz = dz0 / 1000, k = name.startsWith("shell") ? 5 / 3 : 1;
+    Ixx += mk * (k * (dy * dy + dz * dz) / 12 + y * y + z * z);
+    Iyy += mk * (k * (dx * dx + dz * dz) / 12 + x * x + z * z);
+    Izz += mk * (k * (dx * dx + dy * dy) / 12 + x * x + y * y);
+    Ixz += -mk * x * z;
+  }
+  Object.assign(p, { mb: M, l: cz, e: cx, Ixx, Iyy, Izz, Ixz, mw: w.mass, r: w.radius, d: w.track, Iwa: w.Iwa, Iwt: w.Iwt });
+  p.total_mass = p.mb + 2 * p.mw;
+  const corners = [];
+  for (const c of comps) {
+    if (c[5] === "hidden" || c[5] === "posts") continue;
+    const [x, , z] = c[2], [dx, , dz] = c[3];
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) corners.push([(x + sx * dx / 2) / 1000, (z + sz * dz / 2) / 1000]);
+  }
+  p.height_mm = max(...corners.map(c => c[1])) * 1000 + w.radius * 1000;
+  const contact = sign => { let th = 0; while (abs(th) < PI / 2) { th += sign * 0.002; const s = sin(th), c = cos(th);
+      if (min(...corners.map(([x, z]) => p.r - x * s + z * c)) <= 0) return th; } return sign * PI / 2; };
+  p.fall_fwd = contact(1); p.fall_back = contact(-1);
+  return p;
+}
+
+// ---------- equations of motion (generated by derive_eom.py, Kane's method) ----------
+function massForcing(th, U1, U2, U3, TL, TR, p, out) {
+  const { mb, mw, l, e, r, d, g, Ixx, Iyy, Izz, Ixz, Iwa, Iwt } = p;
+  const s = sin(th), c = cos(th), s2 = sin(2 * th), c2 = cos(2 * th);
+  out[0] = 2 * Iwa / (r * r) + mb + 2 * mw;                       // M00
+  out[1] = c * l * mb - e * mb * s;                               // M01 = M10
+  out[2] = Iyy + e * e * mb + l * l * mb;                         // M11
+  out[3] = 0.5 * Iwa * d * d / (r * r) + 2 * Iwt - 0.5 * Ixx * c2 + 0.5 * Ixx - Ixz * s2 + 0.5 * Izz * c2 + 0.5 * Izz
+    + c * c * e * e * mb + 2 * c * e * l * mb * s + 0.5 * d * d * mw + l * l * mb * s * s;   // M22
+  out[4] = TL / r + TR / r + U2 * U2 * c * e * mb + U2 * U2 * l * mb * s + U3 * U3 * c * e * mb + U3 * U3 * l * mb * s;
+  out[5] = 0.5 * Ixx * U3 * U3 * s2 - Ixz * U3 * U3 * c2 - 0.5 * Izz * U3 * U3 * s2 - TL - TR - 0.5 * U3 * U3 * e * e * mb * s2
+    + U3 * U3 * e * l * mb * c2 + 0.5 * U3 * U3 * l * l * mb * s2 + c * e * g * mb + g * l * mb * s;
+  out[6] = -Ixx * U2 * U3 * s2 + 2 * Ixz * U2 * U3 * c2 + Izz * U2 * U3 * s2 - 0.5 * TL * d / r + 0.5 * TR * d / r
+    - U1 * U3 * c * e * mb - U1 * U3 * l * mb * s + U2 * U3 * e * e * mb * s2 - 2 * U2 * U3 * e * l * mb * c2 - U2 * U3 * l * l * mb * s2;
+}
+
+// state indices
+const IX = 0, IY = 1, IPSI = 2, ITH = 3, IV = 4, ITHD = 5, IPSID = 6, IGL = 7, IWL = 8, IGR = 9, IWR = 10, IAL = 11, IAR = 12;
+
+class Motor {
+  constructor(mp, rds, kt = 1, rs = 1, fs = 1) {
+    this.G = mp.gear; this.Kt = mp.Kt * kt; this.Ke = mp.Ke * kt; this.R = mp.R * rs + rds;
+    this.eta = mp.eta; this.J = mp.J_out; this.Tc = mp.T_coulomb_out * fs; this.Ts = this.Tc * mp.stiction_ratio;
+    this.b = mp.b_visc_out * fs; this.h = 0.5 * mp.backlash_deg * PI / 180; this.k = mp.gear_stiffness;
+    this.c = 2 * mp.gear_damping_ratio * sqrt(this.k * this.J * 0.5);
+  }
+  current(duty, vbat, w, en) { return en ? (duty * vbat - this.Ke * this.G * w) / this.R : 0; }
+  friction(w) { return this.Tc * tanh(w / 0.1) + (this.Ts - this.Tc) * exp(-((w / 0.3) ** 2)) * tanh(w / 0.1) + this.b * w; }
+  gear(delta, dd) {
+    const h = this.h;
+    if (delta > h) return max(0, this.k * (delta - h) + this.c * dd);
+    if (delta < -h) return min(0, this.k * (delta + h) + this.c * dd);
+    return 0;
+  }
+}
+
+class Plant {
+  constructor(p) {
+    this.p = p; const mp = p.motor;
+    this.mL = new Motor(mp, p.power.drv_rds_on);
+    this.mR = new Motor(mp, p.power.drv_rds_on, mp.mismatch_kt, mp.mismatch_R, mp.mismatch_fric);
+    this.mf = new Float64Array(7);
+    this.k = [0, 1, 2, 3].map(() => new Float64Array(13));
+    this.tmp = new Float64Array(13);
+    this.aux = new Float64Array(7);
+    this.reset();
+  }
+  reset(soc) {
+    this.x = new Float64Array(13);
+    this.soc = soc ?? this.p.power.soc0;
+    this.vbat = lipoOcv(this.soc, this.p.power.cells);
+    this.ibat = 0; this.iL = this.iR = 0; this.TL = this.TR = 0;
+    this.acc = [0, 0, 0]; this.contact = 0; this.t = 0; this.F_ext = 0;
+  }
+  deriv(x, dL, dR, en, F, ph, out, aux) {
+    const p = this.p, th = x[ITH], v = x[IV], thd = x[ITHD], psid = x[IPSID], r = p.r, d = p.d;
+    const wla = (v - 0.5 * d * psid) / r, wra = (v + 0.5 * d * psid) / r;
+    const phiL = x[IAL] - th, phiR = x[IAR] - th, pdL = wla - thd, pdR = wra - thd;
+    const mL = this.mL, mR = this.mR;
+    const iL = mL.current(dL, this.vbat, x[IWL], en), iR = mR.current(dR, this.vbat, x[IWR], en);
+    const TgL = mL.gear(x[IGL] - phiL, x[IWL] - pdL), TgR = mR.gear(x[IGR] - phiR, x[IWR] - pdR);
+    const dwL = (mL.eta * mL.G * mL.Kt * iL - mL.friction(x[IWL]) - TgL) / mL.J;
+    const dwR = (mR.eta * mR.G * mR.Kt * iR - mR.friction(x[IWR]) - TgR) / mR.J;
+    const m = this.mf; massForcing(th, v, thd, psid, TgL, TgR, p, m);
+    let F0 = m[4], F1 = m[5], F2 = m[6];
+    const N = p.total_mass * p.g;
+    F0 -= p.wheel.c_rr * N * tanh(v / 0.02);
+    F2 -= 0.5 * N * p.wheel.mu * 0.0015 * tanh(psid / 0.2) * d / 2;
+    if (F) { F0 += F; F1 += F * ph * cos(th); }
+    if (this.contact) F0 -= 2.0 * v * p.total_mass * 5;
+    const a = m[0], b = m[1], dd = m[2], det = a * dd - b * b;
+    const dv = (F0 * dd - b * F1) / det;
+    let dthd = (a * F1 - b * F0) / det;
+    const dpsid = F2 / m[3];
+    if (this.contact) dthd = 0;
+    out[0] = v * cos(x[IPSI]); out[1] = v * sin(x[IPSI]); out[2] = psid; out[3] = thd; out[4] = dv; out[5] = dthd;
+    out[6] = dpsid; out[7] = x[IWL]; out[8] = dwL; out[9] = x[IWR]; out[10] = dwR; out[11] = wla; out[12] = wra;
+    if (aux) { aux[0] = iL; aux[1] = iR; aux[2] = TgL; aux[3] = TgR; aux[4] = dv; aux[5] = dthd; aux[6] = dpsid; }
+  }
+  step(dt, dL, dR, en = true, F = 0, ph = 0.07) {
+    const x = this.x, [k1, k2, k3, k4] = this.k, t = this.tmp, aux = this.aux;
+    this.deriv(x, dL, dR, en, F, ph, k1, aux);
+    for (let i = 0; i < 13; i++) t[i] = x[i] + 0.5 * dt * k1[i];
+    this.deriv(t, dL, dR, en, F, ph, k2, null);
+    for (let i = 0; i < 13; i++) t[i] = x[i] + 0.5 * dt * k2[i];
+    this.deriv(t, dL, dR, en, F, ph, k3, null);
+    for (let i = 0; i < 13; i++) t[i] = x[i] + dt * k3[i];
+    this.deriv(t, dL, dR, en, F, ph, k4, null);
+    for (let i = 0; i < 13; i++) x[i] += dt / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
+    this.iL = aux[0]; this.iR = aux[1]; this.TL = aux[2]; this.TR = aux[3];
+    this.acc[0] = aux[4]; this.acc[1] = aux[5]; this.acc[2] = aux[6]; this.F_ext = F;
+    const p = this.p;
+    if (x[ITH] >= p.fall_fwd) { x[ITH] = p.fall_fwd; if (x[ITHD] > 0) x[ITHD] *= -0.15; this.contact = abs(x[ITHD]) < 0.2 ? 1 : 0; }
+    else if (x[ITH] <= p.fall_back) { x[ITH] = p.fall_back; if (x[ITHD] < 0) x[ITHD] *= -0.15; this.contact = abs(x[ITHD]) < 0.2 ? -1 : 0; }
+    else this.contact = 0;
+    const pw = p.power;
+    const im = en ? dL * this.iL + dR * this.iR : 0;
+    const ocv = lipoOcv(this.soc, pw.cells);
+    this.ibat = im + pw.logic_power_W / max(this.vbat, 3);
+    this.vbat = ocv - this.ibat * (pw.R_internal + pw.R_wiring);
+    this.soc -= this.ibat * dt / (3.6 * pw.capacity_mAh);
+    this.t += dt;
+  }
+  pointAccelA(px, pz) {
+    const x = this.x, th = x[ITH], thd = x[ITHD], psid = x[IPSID], v = x[IV];
+    const [dv, dthd, dpsid] = this.acc, s = sin(th), c = cos(th);
+    const rx = px * c + pz * s, rz = -px * s + pz * c, ry = 0;
+    let ax = dv, ay = v * psid, az = 0;
+    const wx = 0, wy = thd, wz = psid, alx = -psid * thd, aly = dthd, alz = dpsid;
+    ax += aly * rz - alz * ry; ay += alz * rx - alx * rz; az += alx * ry - aly * rx;
+    const cx = wy * rz - wz * ry, cy = wz * rx - wx * rz, cz = wx * ry - wy * rx;
+    ax += wy * cz - wz * cy; ay += wz * cx - wx * cz; az += wx * cy - wy * cx;
+    return [ax, ay, az];
+  }
+  tractionRatio() {
+    if (this.contact) return 0;
+    const p = this.p, x = this.x, th = x[ITH], thd = x[ITHD], [dv, dthd] = this.acc;
+    const acom = dv + p.l * (cos(th) * dthd - sin(th) * thd * thd);
+    return abs(p.mb * acom + 2 * p.mw * dv - this.F_ext) / (p.wheel.mu * p.total_mass * p.g);
+  }
+}
+
+// ---------- sensors ----------
+class MPU6050 {
+  constructor(p) { this.p = p; this.sp = p.sensor; this.rng = rng(this.sp.seed); this.tau = 1 / (2 * PI * this.sp.dlpf_hz);
+    this.mount = this.sp.mount_error_deg * PI / 180; this.alsb = 32768 / this.sp.accel_range_g; this.glsb = 32768 / this.sp.gyro_range_dps; this.reset(); }
+  reset() { this.f = [0, 0, this.p.g]; this.w = [0, 0, 0]; const b = this.sp.gyro_bias_dps * PI / 180;
+    this.bias = [this.rng.gauss(0, b), this.rng.gauss(0, b), this.rng.gauss(0, b)]; }
+  update(pl, dt) {
+    const x = pl.x, th = x[ITH] + this.mount, s = sin(th), c = cos(th), [px, , pz] = this.sp.mpu_pos;
+    let [ax, ay, az] = pl.pointAccelA(px, pz); az += this.p.g;
+    const fv = [c * ax - s * az, ay, s * ax + c * az], wv = [-x[IPSID] * s, x[ITHD], x[IPSID] * c];
+    const k = dt / (this.tau + dt);
+    for (let i = 0; i < 3; i++) { this.f[i] += k * (fv[i] - this.f[i]); this.w[i] += k * (wv[i] - this.w[i]); }
+    const bw = this.sp.gyro_bias_walk * PI / 180 * sqrt(dt);
+    for (let i = 0; i < 3; i++) this.bias[i] += this.rng.gauss(0, bw);
+  }
+  read(ws) {
+    const sp = this.sp, bw = 1.57 * sp.dlpf_hz;
+    const an = sp.accel_noise_density * sqrt(bw) + sp.vibration_g * 9.81 * abs(ws), gn = sp.gyro_noise_density * sqrt(bw);
+    const o = [];
+    for (let i = 0; i < 3; i++) o.push(clamp(round((this.f[i] + this.rng.gauss(0, an)) / this.p.g * this.alsb), -32768, 32767));
+    for (let i = 0; i < 3; i++) o.push(clamp(round((this.w[i] + this.bias[i] + this.rng.gauss(0, gn)) * 180 / PI * this.glsb), -32768, 32767));
+    return o;
+  }
+}
+const encCount = (pl, idx, p) => floor(pl.x[idx] * p.motor.gear / (2 * PI) * p.motor.ppr * p.motor.quad);
+function adcRead(p, vbat, r) { const pw = p.power; let v = vbat * pw.divider_bottom / (pw.divider_top + pw.divider_bottom);
+  v = v * pw.adc_gain_error + r.gauss(0, 0.01); return clamp(floor(v / 3.3 * 4095), 0, 4095); }
+
+// ---------- firmware ----------
+const DEFAULT_GAINS = { kp: 55, kd: 0.35, ki: 0, kp_v: 20, ki_v: 0.9, kp_t: 0.3, ki_t: 1.0, alpha: 0.98, max_lean: 10,
+  deadband: 0, pwm_cap: 204, fall_angle: 40, trim: 0, kff: 1.0, max_auto_trim: 6, v_ramp: 0.6, yaw_ramp: 400 };
+
+class Controller {
+  constructor(p, g) {
+    this.p = p; this.g = g; this.dt = 1 / p.timing.control_hz; this.cpr = p.motor.counts_per_wheel_rev;
+    this.r = p.wheel.radius; this.track = p.wheel.track; const pw = p.power;
+    this.adcScale = 3.3 / 4095 * (pw.divider_top + pw.divider_bottom) / pw.divider_bottom;
+    this.vcut = pw.v_cutoff; this.emf = p.motor.Ke * p.motor.gear / p.wheel.radius; this.goff = [0, 0, 0];
+    this.n = max(1, round(0.025 / this.dt)); this.reset();
+  }
+  reset() {
+    Object.assign(this, { angle: 0, init: false, lastL: null, lastR: null, v: 0, x: 0, pos_i: 0, ang_i: 0, head_i: 0,
+      v_cmd: 0, yaw_cmd: 0, enabled: true, fallen: false, low_batt: false, low_t: 0, vbat: 8, target: 0, yaw_rate: 0,
+      pwmL: 0, pwmR: 0, u: 0, gyro: 0 });
+    this.win = new Float64Array(this.n); this.wi = 0; this.wn = 0;
+  }
+  calibrate(samples) { const n = samples.length; this.goff = [0, 1, 2].map(i => samples.reduce((s, q) => s + q[3 + i], 0) / n); }
+  update(raw, cL, cR, adc, vIn, yIn) {
+    const g = this.g, dt = this.dt, [ax, , az, , gy, gz] = raw;
+    const gp = (gy - this.goff[1]) / 65.5, gyw = (gz - this.goff[2]) / 65.5, acc = atan2(-ax, az) * 180 / PI;
+    this.gyro = gp;
+    if (!this.init) { this.angle = acc; this.init = true; }
+    this.angle = g.alpha * (this.angle + gp * dt) + (1 - g.alpha) * acc;
+    if (this.lastL === null) { this.lastL = cL; this.lastR = cR; }
+    const dL = cL - this.lastL, dR = cR - this.lastR; this.lastL = cL; this.lastR = cR;
+    this.win[this.wi] = dL + dR; this.wi = (this.wi + 1) % this.n; this.wn = min(this.wn + 1, this.n);
+    let sum = 0; for (let i = 0; i < this.wn; i++) sum += this.win[i];
+    const rel = sum * 0.5 / this.cpr * 2 * PI / (this.wn * dt);
+    const vraw = this.r * (rel + gp * PI / 180);
+    this.v += 0.3 * (vraw - this.v);
+    this.x += this.r * ((dL + dR) * 0.5 / this.cpr * 2 * PI + gp * PI / 180 * dt);
+    this.yaw_rate = gyw;
+    this.vbat += 0.02 * (adc * this.adcScale - this.vbat);
+    if (this.vbat < this.vcut) { this.low_t += dt; if (this.low_t > 2) this.low_batt = true; } else this.low_t = 0;
+    let st = g.v_ramp * dt; this.v_cmd += clamp(vIn - this.v_cmd, -st, st);
+    st = g.yaw_ramp * dt; this.yaw_cmd += clamp(yIn - this.yaw_cmd, -st, st);
+    if (abs(this.angle) > g.fall_angle) this.fallen = true;
+    if (this.fallen || this.low_batt) { this.enabled = false; this.pos_i = this.ang_i = this.head_i = 0; this.pwmL = this.pwmR = 0; return [0, 0, false]; }
+    const ev = this.v_cmd - this.v, lim = g.max_auto_trim / max(g.ki_v, 1e-6);
+    this.pos_i = clamp(this.pos_i + ev * dt, -lim, lim);
+    this.target = clamp(g.kp_v * ev + g.ki_v * this.pos_i, -g.max_lean, g.max_lean);
+    const e = this.angle - g.trim - this.target;
+    this.ang_i = clamp(this.ang_i + e * dt, -50, 50);
+    let u = g.kp * e + g.kd * gp + g.ki * this.ang_i;
+    u += g.kff * this.v_cmd * this.emf / max(this.vbat, 5) * 255;
+    this.u = u;
+    const ey = this.yaw_cmd - gyw;
+    this.head_i = clamp(this.head_i + ey * dt, -90, 90);
+    let diff = g.kp_t * ey + g.ki_t * this.head_i;
+    diff += g.kff * (this.yaw_cmd * PI / 180) * this.track / 2 * this.emf / max(this.vbat, 5) * 255;
+    const out = [u - diff, u + diff].map(ui => { if (abs(ui) > 0.5) ui += Math.sign(ui) * g.deadband; return round(clamp(ui, -g.pwm_cap, g.pwm_cap)); });
+    this.pwmL = out[0]; this.pwmR = out[1]; this.enabled = true;
+    return [out[0], out[1], true];
+  }
+}
+
+// ---------- ring buffer log ----------
+class Ring { constructor(n) { this.a = new Float32Array(n); this.n = n; this.i = 0; this.len = 0; }
+  push(v) { this.a[this.i] = v; this.i = (this.i + 1) % this.n; if (this.len < this.n) this.len++; }
+  get(k) { return this.a[(this.i - this.len + k + this.n) % this.n]; }  // k = 0 oldest
+  clear() { this.i = 0; this.len = 0; } }
+
+// ---------- orchestrator ----------
+class Sim {
+  constructor(opts = {}, gains) {
+    this.opts = opts; this.p = makeParams(opts); this.g = gains || { ...DEFAULT_GAINS };
+    this.plant = new Plant(this.p); this.mpu = new MPU6050(this.p); this.ctrl = new Controller(this.p, this.g);
+    this.adcRng = rng(2);
+    const N = 8 * 200; this.log = {}; for (const k of ["th", "est", "tgt", "pwmL", "pwmR", "v", "vcmd", "vbat", "ibat"]) this.log[k] = new Ring(N);
+    this.v_cmd = 0; this.yaw_cmd = 0; this.pushF = 0; this.pushUntil = 0; this.pushH = 0.07;
+    this.reset();
+  }
+  reset(th0deg = 3, soc) {
+    const p = this.p, dt = p.timing.physics_dt, pl = this.plant;
+    pl.reset(soc); this.mpu.reset(); this.ctrl.reset();
+    const per = round(1 / p.timing.control_hz / dt), samples = [];
+    for (let i = 0; i < 200; i++) { for (let j = 0; j < per; j++) { this.mpu.update(pl, dt); pl.t += dt; } samples.push(this.mpu.read(0)); }
+    this.ctrl.calibrate(samples);
+    const th0 = th0deg * PI / 180; pl.x[ITH] = th0; pl.x[IAL] = pl.x[IAR] = th0; pl.t = 0;
+    this.nextCtrl = 0; this.pending = null; this.duty = [0, 0, true];
+    for (const k in this.log) this.log[k].clear();
+    this.maxTraction = 0;
+  }
+  push(imp, dur = 0.05, h) { this.pushF = imp / dur; this.pushUntil = this.plant.t + dur; if (h !== undefined) this.pushH = h; }
+  advance(seconds) {
+    const p = this.p, dt = p.timing.physics_dt, cdt = 1 / p.timing.control_hz, pl = this.plant;
+    const steps = round(seconds / dt), full = 2 ** p.timing.pwm_bits - 1;
+    for (let s = 0; s < steps; s++) {
+      const t = pl.t;
+      if (t >= this.nextCtrl - 1e-9) {
+        this.nextCtrl += cdt;
+        const raw = this.mpu.read(pl.x[IV]);
+        const [a, b, en] = this.ctrl.update(raw, encCount(pl, IGL, p), encCount(pl, IGR, p), adcRead(p, pl.vbat, this.adcRng), this.v_cmd, this.yaw_cmd);
+        this.pending = [t + p.timing.output_delay, a, b, en];
+        this.logIt();
+      }
+      if (this.pending && t >= this.pending[0] - 1e-9) { this.duty = [this.pending[1] / full, this.pending[2] / full, this.pending[3]]; this.pending = null; }
+      const F = t < this.pushUntil ? this.pushF : 0;
+      pl.step(dt, this.duty[0], this.duty[1], this.duty[2], F, this.pushH);
+      this.mpu.update(pl, dt);
+      if (pl.t > 0.5) { const tr = pl.tractionRatio(); if (tr > this.maxTraction) this.maxTraction = tr; }
+    }
+  }
+  logIt() {
+    const x = this.plant.x, c = this.ctrl, L = this.log;
+    L.th.push(x[ITH] * 180 / PI); L.est.push(c.angle); L.tgt.push(c.target); L.pwmL.push(c.pwmL); L.pwmR.push(c.pwmR);
+    L.v.push(x[IV]); L.vcmd.push(c.v_cmd); L.vbat.push(this.plant.vbat); L.ibat.push(this.plant.ibat);
+  }
+  get fallen() { return this.ctrl.fallen || this.plant.contact !== 0; }
+}
+
+// ---------- OLED face (128 x 64, 1-bit; U8g2-style primitives) ----------
+const FW = 128, FH = 64;
+function rbox(img, x0, y0, x1, y1, r, val = 1) {
+  r = max(0, min(r, (x1 - x0) / 2, (y1 - y0) / 2));
+  for (let y = max(0, floor(y0)); y <= min(FH - 1, y1); y++) for (let x = max(0, floor(x0)); x <= min(FW - 1, x1); x++) {
+    if (x < x0 || y < y0) continue;
+    const cx = clamp(x, x0 + r, x1 - r), cy = clamp(y, y0 + r, y1 - r);
+    if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r + 0.5) img[y * FW + x] = val; }
+}
+function ellipse(img, cx, cy, rx, ry, val = 1) {
+  for (let y = max(0, floor(cy - ry)); y <= min(FH - 1, cy + ry); y++) for (let x = max(0, floor(cx - rx)); x <= min(FW - 1, cx + rx); x++)
+    if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1) img[y * FW + x] = val;
+}
+function tline(img, x0, y0, x1, y1, w, val = 1) {
+  const dx = x1 - x0, dy = y1 - y0, L2 = dx * dx + dy * dy || 1e-9, hw = w / 2;
+  for (let y = max(0, floor(min(y0, y1) - hw)); y <= min(FH - 1, max(y0, y1) + hw); y++)
+    for (let x = max(0, floor(min(x0, x1) - hw)); x <= min(FW - 1, max(x0, x1) + hw); x++) {
+      const t = clamp(((x - x0) * dx + (y - y0) * dy) / L2, 0, 1), px = x0 + t * dx, py = y0 + t * dy;
+      if ((x - px) ** 2 + (y - py) ** 2 <= hw * hw) img[y * FW + x] = val; }
+}
+function arc(img, cx, cy, r, a0, a1, w, val = 1) {
+  a0 = ((a0 % 360) + 360) % 360; a1 = ((a1 % 360) + 360) % 360;
+  for (let y = max(0, floor(cy - r - w)); y <= min(FH - 1, cy + r + w); y++) for (let x = max(0, floor(cx - r - w)); x <= min(FW - 1, cx + r + w); x++) {
+    const dd = sqrt((x - cx) ** 2 + (y - cy) ** 2); if (abs(dd - r) > w / 2) continue;
+    const a = ((atan2(y - cy, x - cx) * 180 / PI) % 360 + 360) % 360;
+    if (a0 <= a1 ? a >= a0 && a <= a1 : a >= a0 || a <= a1) img[y * FW + x] = val; }
+}
+class Face {
+  constructor(seed = 4) { this.r = rng(seed); this.t = 0; this.nextBlink = 2; this.blinkT = -1; this.mood = "idle"; this.hold = 0; this.look = 0; this.lookv = 0; this.img = new Uint8Array(FW * FH); }
+  choose(info, dt) {
+    this.hold = max(0, this.hold - dt);
+    if (info.fallen) return "dizzy";
+    if (info.low_batt) return "sleepy";
+    if (abs(info.rate) > 90 || info.pushed) { this.hold = 1.2; this.mood = "surprised"; return "surprised"; }
+    if (this.hold > 0) return this.mood;
+    if (abs(info.angle) > 12) return "worried";
+    if (info.v_cmd > 0.05) return "happy";
+    if (info.v_cmd < -0.05) return "careful";
+    return "idle";
+  }
+  update(dt, info) {
+    this.t += dt; const mood = this.choose(info, dt);
+    const tgt = info.yaw_cmd > 10 ? -1 : info.yaw_cmd < -10 ? 1 : 0;
+    this.look += (tgt - this.look) * min(1, dt * 8);
+    this.lookv += (clamp(info.angle / 15, -1, 1) - this.lookv) * min(1, dt * 8);
+    if (this.t > this.nextBlink && ["idle", "happy", "careful", "worried"].includes(mood)) { this.blinkT = 0; this.nextBlink = this.t + 2 + 3 * this.r.u(); }
+    let blink = 1;
+    if (this.blinkT >= 0) { this.blinkT += dt; const ph = this.blinkT / 0.16; blink = ph < 1 ? abs(1 - 2 * ph) : 1; if (ph >= 1) this.blinkT = -1; }
+    this.draw(mood, blink); this.current = mood; return mood;
+  }
+  draw(mood, blink = 1) {
+    const img = this.img; img.fill(0);
+    const lx = 36, rx = 92, ey = 26, ox = this.look * 10, oy = this.lookv * 5;
+    if (mood === "dizzy") { for (const cx of [lx, rx]) { tline(img, cx - 11, ey - 11, cx + 11, ey + 11, 5); tline(img, cx - 11, ey + 11, cx + 11, ey - 11, 5); }
+      for (let i = 0; i < 5; i++) { const x0 = 46 + i * 8; tline(img, x0, 52 + (i % 2) * 4, x0 + 8, 52 + ((i + 1) % 2) * 4, 3); } return img; }
+    if (mood === "sleepy") { for (const cx of [lx, rx]) rbox(img, cx - 14, ey + 2, cx + 14, ey + 8, 3); tline(img, 56, 52, 72, 52, 3);
+      rbox(img, 104, 46, 122, 58, 2); rbox(img, 106, 48, 120, 56, 1, 0); rbox(img, 107, 49, 109, 55, 0); rbox(img, 122, 49, 124, 55, 0); return img; }
+    if (mood === "surprised") { for (const cx of [lx, rx]) { ellipse(img, cx, ey, 15, 17); ellipse(img, cx, ey, 9, 11, 0); ellipse(img, cx, ey, 5, 6); }
+      ellipse(img, 64, 53, 6, 7); ellipse(img, 64, 53, 3, 4, 0); return img; }
+    if (mood === "happy") { for (const cx of [lx, rx]) arc(img, cx + ox, ey + 8 + oy, 13, 200, 340, 6); arc(img, 64, 40, 14, 25, 155, 4); return img; }
+    let h = (mood === "careful" ? 22 : 30) * blink;
+    [lx, rx].forEach((cx, i) => {
+      const x0 = cx - 13 + ox, x1 = cx + 13 + ox, y0 = ey - h / 2 + oy, y1 = ey + h / 2 + oy;
+      if (h < 3) { tline(img, x0, ey + oy, x1, ey + oy, 3); return; }
+      rbox(img, x0, y0, x1, y1, 7);
+      if (mood === "worried") { const s = i === 0 ? 1 : -1, xi = i === 0 ? x1 : x0;
+        for (let k = 0; k < 14; k++) tline(img, xi - s * 26, y0 - 4 - k, xi, y0 + 10 - k, 2, 0); }
+    });
+    if (mood === "worried") for (let i = 0; i < 4; i++) tline(img, 50 + i * 7, 54 + (i % 2) * 3, 57 + i * 7, 54 + ((i + 1) % 2) * 3, 3);
+    else if (mood === "careful") tline(img, 58, 54, 70, 54, 3);
+    else arc(img, 64, 44, 9, 30, 150, 3);
+    return img;
+  }
+}
+
+return { makeParams, Sim, Face, DEFAULT_GAINS, COMPONENTS, IX, IY, IPSI, ITH, IV, ITHD, IPSID, IAL, IAR, FW, FH, lipoOcv };
+})();
+
+
+</script>
+<script>
+"use strict";
+(() => {
+const { Sim, Face, DEFAULT_GAINS, ITH, IPSI, IX, IY, IV, IPSID, ITHD, IAL, IAR, FW, FH } = BB;
+const $ = id => document.getElementById(id);
+const PI = Math.PI, D2R = PI / 180;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// ---------------- state ----------------
+const gains = { ...DEFAULT_GAINS };
+const hw = { shell: false, backlash_deg: 1.5, mpu_z: 0.0275, mount_error_deg: 1.0, payload: 0 };
+let sim = makeSim();
+const face = new Face();
+let speed = 1, paused = false, xray = false, fast = false;
+const hold = { up: false, down: false, left: false, right: false };
+let pushVis = 0, pushDir = 1, peakTrac = 0;
+const trail = [];
+
+function makeSim() {
+  return new Sim({ shell: hw.shell, backlash_deg: hw.backlash_deg, mpu_pos: [hw.mpu_z > 0.05 ? 0 : -0.016, 0, hw.mpu_z],
+    mount_error_deg: hw.mount_error_deg, payload: hw.payload }, gains);
+}
+
+// ---------------- three.js scene ----------------
+const canvas = $("view"), stage = $("stage");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 40);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8c8478, 0.6));
+const sun = new THREE.DirectionalLight(0xffffff, 0.7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+Object.assign(sun.shadow.camera, { left: -0.25, right: 0.25, top: 0.25, bottom: -0.25, near: 0.05, far: 3 });
+sun.shadow.bias = -0.0005;
+scene.add(sun, sun.target);
+
+// floor with 10 cm checker
+const floorTex = document.createElement("canvas"); floorTex.width = floorTex.height = 128;
+const ftex = new THREE.CanvasTexture(floorTex);
+ftex.wrapS = ftex.wrapT = THREE.RepeatWrapping; ftex.repeat.set(60, 60); ftex.anisotropy = 4;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ map: ftex, roughness: 0.95 }));
+floor.rotation.x = -PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+function applyTheme() {
+  const g = floorTex.getContext("2d"), a = css("--floor-a"), b = css("--floor-b");
+  g.fillStyle = a; g.fillRect(0, 0, 128, 128); g.fillStyle = b; g.fillRect(0, 0, 64, 64); g.fillRect(64, 64, 64, 64);
+  ftex.needsUpdate = true;
+  const sky = new THREE.Color(css("--sky"));
+  scene.background = sky; scene.fog = new THREE.Fog(sky, 1.2, 4.5);
+  trailMat.color.set(css("--trace-b"));
+  chartColors = null;
+}
+
+// trail on the floor
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(600 * 3), 3));
+const trailMat = new THREE.LineBasicMaterial({ color: 0x2b8fd6 });
+const trailLine = new THREE.Line(trailGeo, trailMat); trailLine.frustumCulled = false; scene.add(trailLine);
+
+// robot: root (heading, on floor at axle height) > pitch group (body), wheels on root
+let root, pitchG, wheels = [], shellMeshes = [], innerMeshes = [], oledTex, arrow;
+const oledCanvas = document.createElement("canvas"); oledCanvas.width = FW; oledCanvas.height = FH;
+const mm = v => v / 1000;
+const S2T = (x, y, z) => new THREE.Vector3(x, z, -y);   // sim body/world -> three
+
+function boxMesh(c, s, color, opts = {}) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(mm(s[0]), mm(s[2]), mm(s[1])),
+    new THREE.MeshStandardMaterial({ color, roughness: opts.rough ?? 0.65, metalness: opts.metal ?? 0.0, transparent: !!opts.transparent }));
+  m.position.copy(S2T(mm(c[0]), mm(c[1]), mm(c[2])));
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+
+function buildRobot() {
+  if (root) scene.remove(root);
+  const p = sim.p;
+  root = new THREE.Group(); pitchG = new THREE.Group(); root.add(pitchG); scene.add(root);
+  shellMeshes = []; innerMeshes = []; wheels = [];
+  for (const [name, , c, s, color, grp] of p.comps) {
+    if (grp === "hidden") continue;
+    if (grp === "posts") {
+      for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+        const m = boxMesh([c[0] + sx * (s[0] / 2 - 3), c[1] + sy * (s[1] / 2 - 3), c[2]], [4, 4, s[2]], color, { metal: 0.3 });
+        pitchG.add(m); innerMeshes.push(m);
+      }
+      continue;
+    }
+    if (grp === "shell") {
+      const parts = [];
+      if (name === "ears") for (const sy of [-1, 1]) parts.push(boxMesh([c[0], sy * 24, c[2]], [14, 14, 12], color));
+      else if (name === "bow_tie") { for (const sy of [-1, 1]) parts.push(boxMesh([c[0], sy * 8, c[2]], [s[0], 14, s[2]], color)); parts.push(boxMesh([c[0] + 1, 0, c[2]], [s[0], 6, 7], "#8f1426")); }
+      else parts.push(boxMesh(c, s, color, { rough: 0.8, transparent: true }));
+      for (const m of parts) { pitchG.add(m); shellMeshes.push(m); }
+      continue;
+    }
+    const m = boxMesh(c, s, color, { metal: grp === "motor" ? 0.5 : 0 });
+    pitchG.add(m);
+    if (grp === "mpu") m.userData.mpu = true;
+    if (name !== "oled") innerMeshes.push(m);
+  }
+  // OLED glass with the live face texture (sits in a window of the shell when it is on)
+  const o = p.comps.find(c => c[0] === "oled");
+  const xFront = hw.shell ? 31.4 : o[2][0] + o[3][0] / 2 + 0.3;
+  const zc = o[2][2] + o[3][2] / 2 - 6 - 14.7 / 2;
+  const bez = new THREE.Mesh(new THREE.PlaneGeometry(mm(33), mm(19)), new THREE.MeshBasicMaterial({ color: 0x07090c }));
+  bez.position.copy(S2T(mm(xFront), 0, mm(zc))); bez.rotation.y = PI / 2; pitchG.add(bez);
+  oledTex = new THREE.CanvasTexture(oledCanvas); oledTex.magFilter = THREE.NearestFilter; oledTex.minFilter = THREE.LinearFilter;
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(mm(29.4), mm(14.7)), new THREE.MeshBasicMaterial({ map: oledTex }));
+  scr.position.copy(S2T(mm(xFront + 0.2), 0, mm(zc))); scr.rotation.y = PI / 2; pitchG.add(scr);
+  // wheels: tyre + white hub + spokes, spin about the axle
+  for (const side of [1, -1]) {
+    const hub = new THREE.Group(); hub.position.copy(S2T(0, side * p.d / 2, 0)); root.add(hub);
+    const spin = new THREE.Group(); hub.add(spin);
+    const tyre = new THREE.Mesh(new THREE.CylinderGeometry(p.r, p.r, p.wheel.width, 40), new THREE.MeshStandardMaterial({ color: 0x2b2b2f, roughness: 0.9 }));
+    tyre.rotation.x = PI / 2; tyre.castShadow = true; spin.add(tyre);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(p.r * 0.72, p.r * 0.72, p.wheel.width + 0.0008, 32), new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.5 }));
+    rim.rotation.x = PI / 2; spin.add(rim);
+    for (let k = 0; k < 3; k++) {
+      const sp = new THREE.Mesh(new THREE.BoxGeometry(p.r * 1.3, 0.0016, 0.0006), new THREE.MeshStandardMaterial({ color: 0x9a9aa0 }));
+      sp.position.z = -side * (p.wheel.width / 2 + 0.0006); sp.rotation.z = k * PI / 3; spin.add(sp);
+    }
+    wheels.push(spin);
+  }
+  arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(-0.11, p.l + 0.04, 0), 0.07, 0xd9442f, 0.022, 0.014);
+  arrow.visible = false; pitchG.add(arrow);
+  applyXray();
+  $("massNote").textContent = `${(p.total_mass * 1000).toFixed(0)} g total · centre of mass ${(p.l * 1000).toFixed(1)} mm above the axle · body hits the floor at ${(p.fall_fwd / D2R).toFixed(0)}°`;
+}
+function applyXray() {
+  for (const m of shellMeshes) { m.material.opacity = xray ? 0.16 : 1; m.material.transparent = xray; m.material.depthWrite = !xray; m.castShadow = !xray; }
+  for (const m of innerMeshes) m.visible = !hw.shell || xray;
+}
+
+// ---------------- camera ----------------
+const cam = { mode: 0, az: 40 * D2R, el: 18 * D2R, dist: 0.42, tgt: new THREE.Vector3(0, 0.05, 0) };
+function updateCamera() {
+  const x = sim.plant.x;
+  if (cam.mode === 0) { const want = x[IPSI] + 40 * D2R; const d = ((want - cam.az + PI) % (2 * PI) + 2 * PI) % (2 * PI) - PI; cam.az += d * 0.06; }
+  else if (cam.mode === 2) cam.az = x[IPSI] - PI / 2;
+  const t = S2T(x[IX], x[IY], 0.05); cam.tgt.lerp(t, 0.15);
+  const ce = Math.cos(cam.el);
+  const off = S2T(cam.dist * ce * Math.cos(cam.az), cam.dist * ce * Math.sin(cam.az), cam.dist * Math.sin(cam.el));
+  camera.position.copy(cam.tgt).add(off); camera.lookAt(cam.tgt);
+  sun.position.copy(cam.tgt).add(new THREE.Vector3(-0.5, 1.1, 0.6)); sun.target.position.copy(cam.tgt);
+}
+function setCam(m) { cam.mode = m; document.querySelectorAll(".camsel button").forEach(b => b.classList.toggle("on", +b.dataset.cam === m)); }
+document.querySelectorAll(".camsel button").forEach(b => b.addEventListener("click", () => setCam(+b.dataset.cam)));
+const ptrs = new Map(); let pinch0 = 0;
+canvas.addEventListener("pointerdown", e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
+canvas.addEventListener("pointermove", e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const [px, py] = ptrs.get(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  if (ptrs.size === 1) { if (cam.mode !== 1) setCam(1); cam.az -= (e.clientX - px) * 0.008; cam.el = Math.min(80 * D2R, Math.max(3 * D2R, cam.el + (e.clientY - py) * 0.006)); }
+  else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch0) cam.dist = Math.min(2, Math.max(0.16, cam.dist * pinch0 / d)); pinch0 = d; }
+});
+const endPtr = e => { ptrs.delete(e.pointerId); pinch0 = 0; };
+canvas.addEventListener("pointerup", endPtr); canvas.addEventListener("pointercancel", endPtr);
+canvas.addEventListener("wheel", e => { e.preventDefault(); cam.dist = Math.min(2, Math.max(0.16, cam.dist * (e.deltaY < 0 ? 0.9 : 1.1))); }, { passive: false });
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / Math.max(1, h); camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+// ---------------- controls ----------------
+function doPush(dir, hard) {
+  sim.push(dir * (hard ? 0.035 : 0.02), 0.05, sim.p.l + 0.04);
+  pushVis = 0.4; pushDir = dir;
+}
+function doReset() { sim.reset(); trail.length = 0; peakTrac = 0; }
+function rebuild() { sim = makeSim(); trail.length = 0; peakTrac = 0; buildRobot(); }
+
+document.querySelectorAll("[data-hold]").forEach(b => {
+  const k = b.dataset.hold;
+  const on = e => { e.preventDefault(); hold[k] = true; b.classList.add("on"); b.setPointerCapture?.(e.pointerId); };
+  const off = () => { hold[k] = false; b.classList.remove("on"); };
+  b.addEventListener("pointerdown", on); b.addEventListener("pointerup", off); b.addEventListener("pointercancel", off); b.addEventListener("lostpointercapture", off);
+  b.addEventListener("contextmenu", e => e.preventDefault());
+});
+$("fastBtn").addEventListener("click", () => { fast = !fast; $("fastBtn").classList.toggle("on", fast); $("fastBtn").setAttribute("aria-pressed", fast); });
+$("pushFwd").addEventListener("click", () => doPush(1, fast));
+$("pushBack").addEventListener("click", () => doPush(-1, fast));
+$("resetBtn").addEventListener("click", doReset);
+$("shellBtn").addEventListener("click", () => { hw.shell = !hw.shell; $("shellBtn").classList.toggle("on", hw.shell); $("shellBtn").setAttribute("aria-pressed", hw.shell); rebuild(); });
+$("xrayBtn").addEventListener("click", () => { xray = !xray; $("xrayBtn").classList.toggle("on", xray); $("xrayBtn").setAttribute("aria-pressed", xray); applyXray(); });
+$("drainBtn").addEventListener("click", () => { sim.plant.soc = 0.15; });
+$("pauseBtn").addEventListener("click", () => setPaused(!paused));
+function setPaused(v) { paused = v; $("pauseBtn").textContent = paused ? "Resume" : "Pause"; $("pauseBtn").classList.toggle("on", paused); }
+document.querySelectorAll("#speedSeg button").forEach(b => b.addEventListener("click", () => setSpeed(+b.dataset.sp)));
+function setSpeed(v) { speed = v; document.querySelectorAll("#speedSeg button").forEach(b => b.classList.toggle("on", +b.dataset.sp === v)); }
+
+const hwInput = (id, out, key, fmt) => $(id).addEventListener("change", () => { hw[key] = +$(id).value; rebuild(); });
+const hwLive = (id, out, fmt) => $(id).addEventListener("input", () => { $(out).textContent = fmt(+$(id).value); });
+hwLive("hwBacklash", "oBacklash", v => v.toFixed(2).replace(/0$/, "") + "°"); hwInput("hwBacklash", "oBacklash", "backlash_deg");
+hwLive("hwTilt", "oTilt", v => v.toFixed(2).replace(/0$/, "") + "°"); hwInput("hwTilt", "oTilt", "mount_error_deg");
+hwLive("hwPayload", "oPayload", v => v + " g"); hwInput("hwPayload", "oPayload", "payload");
+$("hwMpu").addEventListener("change", () => { hw.mpu_z = +$("hwMpu").value; rebuild(); });
+
+// gain sliders
+const GAINS = [
+  ["kp", 0, 150, 0.5, "PWM counts per degree of tilt"],
+  ["kd", 0, 3, 0.01, "PWM per deg/s of pitch rate"],
+  ["ki", 0, 20, 0.1, "PWM per degree·second"],
+  ["kp_v", 0, 60, 0.5, "degrees of lean per m/s of speed error"],
+  ["ki_v", 0, 15, 0.1, "degrees of lean per metre of drift"],
+  ["kp_t", 0, 2, 0.05, "PWM per deg/s of yaw-rate error"],
+  ["ki_t", 0, 5, 0.1, "PWM per degree of heading error"],
+  ["trim", -5, 5, 0.1, "balance-point offset, degrees"],
+  ["kff", 0, 1.5, 0.05, "speed feed-forward (1 = back-EMF exact)"],
+];
+const gwrap = $("gains");
+for (const [k, lo, hi, st, unit] of GAINS) {
+  const row = document.createElement("div"); row.className = "g";
+  row.innerHTML = `<label for="g_${k}">${k}</label><input type="range" id="g_${k}" min="${lo}" max="${hi}" step="${st}"><output id="o_${k}"></output><span class="unit">${unit}</span>`;
+  gwrap.appendChild(row);
+  row.querySelector("input").addEventListener("input", e => { gains[k] = +e.target.value; showGain(k); });
+}
+const fmtG = v => Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2);
+function showGain(k) { $("o_" + k).textContent = fmtG(gains[k]); }
+function syncGains() { for (const [k] of GAINS) { $("g_" + k).value = gains[k]; showGain(k); } }
+$("gTuned").addEventListener("click", () => { Object.assign(gains, DEFAULT_GAINS); syncGains(); });
+$("gLqr").addEventListener("click", () => { Object.assign(gains, { kp: 36.3, kd: 2.34, kp_v: 30.9, ki_v: 14.6 }); syncGains(); });
+syncGains();
+
+// keyboard
+const KEYMAP = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+let shiftDown = false;
+window.addEventListener("keydown", e => {
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "select") return;
+  shiftDown = e.shiftKey;
+  if (KEYMAP[e.key]) { hold[KEYMAP[e.key]] = true; e.preventDefault(); return; }
+  const k = e.key.toLowerCase();
+  if (k === "x") doPush(1, e.shiftKey); else if (k === "z") doPush(-1, e.shiftKey);
+  else if (k === "r") doReset(); else if (k === "s") $("shellBtn").click(); else if (k === "o") $("xrayBtn").click();
+  else if (k === "p") setPaused(!paused); else if (k === "c") setCam((cam.mode + 1) % 3);
+  else if ("1234".includes(k) && k.length === 1) setSpeed([0.25, 0.5, 1, 2][+k - 1]);
+  else return;
+  e.preventDefault();
+});
+window.addEventListener("keyup", e => { shiftDown = e.shiftKey; if (KEYMAP[e.key]) hold[KEYMAP[e.key]] = false; });
+window.addEventListener("blur", () => { for (const k in hold) hold[k] = false; });
+
+// ---------------- panel drawing ----------------
+const oledCtx = $("oled").getContext("2d"), texCtx = oledCanvas.getContext("2d");
+const oledImg = oledCtx.createImageData(FW, FH);
+function drawOled() {
+  const img = face.img, on = hexRGB(css("--oled")), bg = hexRGB(css("--oled-bg")), d = oledImg.data;
+  for (let i = 0; i < FW * FH; i++) { const c = img[i] ? on : bg; d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = 255; }
+  oledCtx.putImageData(oledImg, 0, 0); texCtx.putImageData(oledImg, 0, 0); if (oledTex) oledTex.needsUpdate = true;
+}
+function hexRGB(h) { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join(""); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+
+let chartColors = null;
+function chart(id, series, lo, hi) {
+  const cv = $(id), dpr = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  if (!chartColors) chartColors = { a: css("--trace-a"), b: css("--trace-b"), c: css("--trace-c"), line: css("--line"), muted: css("--muted") };
+  const C = chartColors, y = v => h - 4 - (Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo) * (h - 8);
+  g.strokeStyle = C.line; g.lineWidth = 1; g.beginPath();
+  for (const v of [lo, 0, hi]) { if (v < lo || v > hi) continue; g.moveTo(0, Math.round(y(v)) + 0.5); g.lineTo(w, Math.round(y(v)) + 0.5); } g.stroke();
+  g.fillStyle = C.muted; g.font = "10px " + css("--f-mono");
+  g.fillText(String(hi), 3, 10); g.fillText(String(lo), 3, h - 3);
+  const N = 1200;
+  for (const [ring, col, lw] of series) {
+    const n = Math.min(ring.len, N); if (n < 2) continue;
+    g.strokeStyle = C[col]; g.lineWidth = lw; g.beginPath();
+    for (let k = 0; k < n; k++) { const v = ring.get(ring.len - n + k), px = w - (n - 1 - k) * w / N; k ? g.lineTo(px, y(v)) : g.moveTo(px, y(v)); }
+    g.stroke();
+  }
+}
+
+const RO = [["pitch", "°"], ["estimate", "°"], ["speed", "m/s"], ["yaw rate", "°/s"], ["battery", "V"], ["draw", "mA"], ["face", ""]];
+$("readouts").innerHTML = RO.map(([k], i) => `<dt>${k}</dt><dd id="ro${i}">–</dd>`).join("");
+let uiTick = 0;
+function updatePanel() {
+  const x = sim.plant.x, c = sim.ctrl, pl = sim.plant;
+  const vals = [(x[ITH] / D2R).toFixed(2) + "°", c.angle.toFixed(2) + "°", x[IV].toFixed(2) + " m/s", (x[IPSID] / D2R).toFixed(0) + "°/s",
+    `${pl.vbat.toFixed(2)} V · ${Math.max(0, pl.soc * 100).toFixed(0)}%`, (pl.ibat * 1000).toFixed(0) + " mA", face.current || "idle"];
+  vals.forEach((v, i) => { $("ro" + i).textContent = v; });
+  const st = $("status");
+  if (sim.fallen) { st.textContent = "Fallen · pick it up"; st.className = "chip bad"; }
+  else if (c.low_batt) { st.textContent = "Low battery cut-off"; st.className = "chip warn"; }
+  else { st.textContent = "Balancing"; st.className = "chip good"; }
+  $("clock").textContent = `t ${pl.t.toFixed(1)} s · ×${speed}${paused ? " · paused" : ""}`;
+  const L = sim.log;
+  let sat = 0; const n = Math.min(L.pwmL.len, 400);
+  for (let k = 0; k < n; k++) if (Math.abs(L.pwmL.get(L.pwmL.len - n + k)) >= gains.pwm_cap - 1) sat++;
+  const satP = n ? sat / n * 100 : 0;
+  peakTrac = Math.max(peakTrac * 0.995, pl.tractionRatio());
+  $("diag").innerHTML =
+    `<span>PWM at the 80 % cap, last 2 s</span><span class="${satP > 10 ? "warn" : ""}">${satP.toFixed(0)} %</span>` +
+    `<span>Tyre grip used (peak)</span><span class="${peakTrac > 1 ? "bad" : ""}">${(peakTrac * 100).toFixed(0)} %${peakTrac > 1 ? " slip" : ""}</span>` +
+    `<span>Motor current L / R</span><span>${(pl.iL * 1000).toFixed(0)} / ${(pl.iR * 1000).toFixed(0)} mA</span>`;
+}
+
+// ---------------- main loop ----------------
+let last = performance.now();
+function frame(now) {
+  const dtReal = Math.min(0.05, (now - last) / 1000); last = now;
+  step(dtReal);
+  requestAnimationFrame(frame);
+}
+function step(dtReal) {
+  const fastNow = fast || shiftDown;
+  sim.v_cmd = hold.up ? (fastNow ? 0.35 : 0.2) : hold.down ? -(fastNow ? 0.35 : 0.2) : 0;
+  sim.yaw_cmd = hold.left ? 120 : hold.right ? -120 : 0;
+  if (!paused) {
+    const dt = dtReal * speed;
+    sim.advance(dt);
+    const x = sim.plant.x, c = sim.ctrl;
+    const lastP = trail[trail.length - 1];
+    if (!lastP || Math.hypot(lastP[0] - x[IX], lastP[1] - x[IY]) > 0.01) { trail.push([x[IX], x[IY]]); if (trail.length > 600) trail.shift(); }
+    face.update(dt, { angle: c.angle, rate: x[ITHD] / D2R, v_cmd: c.v_cmd, yaw_cmd: c.yaw_cmd, fallen: sim.fallen, low_batt: c.low_batt, pushed: pushVis > 0.35 });
+    pushVis = Math.max(0, pushVis - dt);
+  }
+  // pose
+  const x = sim.plant.x;
+  root.position.copy(S2T(x[IX], x[IY], sim.p.r)); root.rotation.y = x[IPSI]; pitchG.rotation.z = -x[ITH];
+  wheels[0].rotation.z = -x[IAL]; wheels[1].rotation.z = -x[IAR];
+  arrow.visible = pushVis > 0;
+  if (arrow.visible) { arrow.setDirection(new THREE.Vector3(pushDir, 0, 0)); arrow.position.set(-pushDir * 0.11, sim.p.l + 0.04, 0); }
+  const pos = trailGeo.attributes.position;
+  trail.forEach(([a, b], i) => pos.setXYZ(i, a, 0.0006, -b)); pos.needsUpdate = true; trailGeo.setDrawRange(0, trail.length);
+  updateCamera();
+  renderer.render(scene, camera);
+  drawOled();
+  const L = sim.log;
+  chart("c1", [[L.tgt, "c", 1.2], [L.th, "a", 1.6], [L.est, "b", 1.2]], -15, 15);
+  chart("c2", [[L.pwmL, "a", 1.2], [L.pwmR, "b", 1.2]], -255, 255);
+  chart("c3", [[L.vcmd, "b", 1.4], [L.v, "a", 1.6]], -0.6, 0.6);
+  if (++uiTick % 4 === 0) updatePanel();
+}
+
+// ---------------- video recording (3D view -> .webm download) ----------------
+const recBtn = $("recBtn"); let rec = null, recChunks = [];
+recBtn.addEventListener("click", () => {
+  if (rec) { rec.stop(); return; }
+  if (!canvas.captureStream || typeof MediaRecorder === "undefined") { alert("Video recording is not supported in this browser. Try Chrome or Edge."); return; }
+  const mime = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(m => MediaRecorder.isTypeSupported(m));
+  rec = new MediaRecorder(canvas.captureStream(30), { mimeType: mime, videoBitsPerSecond: 6e6 }); recChunks = [];
+  rec.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+  rec.onstop = () => {
+    const url = URL.createObjectURL(new Blob(recChunks, { type: "video/webm" }));
+    const a = document.createElement("a"); a.href = url; a.download = "bobot-sim-" + Date.now() + ".webm"; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    rec = null; recBtn.classList.remove("on"); recBtn.innerHTML = "&#9679; Record";
+  };
+  rec.start(); recBtn.classList.add("on"); recBtn.innerHTML = "&#9632; Stop &amp; save";
+});
+
+// theme follows the viewer
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+mq.addEventListener?.("change", applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+buildRobot(); applyTheme(); resize(); updatePanel();
+// Offline video rendering: open index.html?manual=1 and drive window.__bb.step(dt) frame by frame.
+window.__bb = { step, hold, doPush, doReset, setCam, setSpeed, gains, cam, get sim() { return sim; } };
+if (!/[?&]manual=1/.test(location.search)) requestAnimationFrame(frame);
+})();
+
+</script>
+
+</body></html>

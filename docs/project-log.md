@@ -4,6 +4,7 @@
 | Date | What was done |
 |---|---|
 | 2026-11-09 | Repository created. Fusion 360 CAD scripts (Python + C++) added. |
+| 2026-11-09 | Cover page redesigned. Concept sketches and design sheets added. Rough web simulator added with offline support, video recording and a demo video. |
 
 ## To-do
 - [ ] Run CAD script in Fusion 360 and export `.f3d` / `.step` to `cad/exports/`

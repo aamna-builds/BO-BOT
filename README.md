@@ -17,6 +17,7 @@ Mechanical design, electronics, firmware, simulation and documentation, all in o
 [About](#about) ·
 [Design](#design) ·
 [Specifications](#specifications) ·
+[Simulation](#simulation) ·
 [Architecture](#system-architecture) ·
 [Repository](#repository-structure) ·
 [Roadmap](#roadmap)
@@ -42,12 +43,34 @@ The project covers the full engineering workflow:
 
 ## Design
 
-<p align="center">
-  <img src="docs/images/reference-sheet.png" alt="BO-BOT design reference sheet" width="95%">
-</p>
-
 The design is a three-platform chassis inside an egg-shaped cat shell. The battery sits low to keep the centre of mass
 close to the axle, drivers and sensors sit on the middle platform, and the ESP32 and OLED face sit at the top.
+
+**Concept sketches:** early ideas for the outer layer, internal structure, LED face expressions and alternative looks.
+
+<p align="center">
+  <img src="docs/images/concept-sketch.png" alt="BO-BOT concept sketches" width="95%">
+</p>
+
+**Design sheet (3D-printed shell version):** dimensions, internal layout, components and system block diagram.
+
+<p align="center">
+  <img src="docs/images/design-sheet-3d-print.png" alt="BO-BOT design sheet, 3D-printed shell" width="95%">
+</p>
+
+The earlier [thermocol casing version](docs/images/design-sheet-thermocol.png) is kept for reference.
+
+## Simulation
+
+A browser-based 3D simulator lets you drive the robot, push it, tune the controller gains live and record video.
+Open [`simulation/web/index.html`](simulation/web/index.html) in Chrome or Edge, no install needed.
+Details are in [`simulation/README.md`](simulation/README.md).
+
+<p align="center">
+  <img src="media/videos/simulation-demo.gif" alt="Simulation demo" width="60%"><br>
+  <sub>Scripted demo: balancing, driving, turning and recovering from pushes.
+  <a href="media/videos/simulation-demo.mp4">Full video (MP4)</a></sub>
+</p>
 
 ## Specifications
 
@@ -107,7 +130,8 @@ Each folder has its own README describing what belongs there.
 | CAD | Parametric Fusion 360 model of the robot | Done |
 | CAD | Export `.f3d` / `.step` and renders | In progress |
 | CAD | Alternative body and layout designs | Planned |
-| Simulation | Inverted-pendulum model and controller tuning | Planned |
+| Simulation | Rough web simulator with live gain tuning and video recording | Prototype done |
+| Simulation | Controller tuning and validation against hardware | Planned |
 | Electronics | Final component selection and wiring pin map | Planned |
 | Firmware | IMU filter, balance controller, motor and encoder drivers | Planned |
 | Firmware | OLED face animations | Planned |
