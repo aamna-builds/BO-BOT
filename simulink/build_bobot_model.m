@@ -1,7 +1,8 @@
 % BUILD_BOBOT_MODEL  Builds the Simulink model bobot_balance.slx (linear plant + the firmware control law).
 %
-% Run this script in MATLAB (it runs bobot_params and bobot_analysis' model steps itself), then open
-% bobot_balance.slx and press Run. The block diagram follows the firmware: speed estimate lag,
+% Run this script in MATLAB. It builds the model, runs it, saves bobot_balance.slx plus a picture of the
+% block diagram and the result graphs in results_matlab/. You can also open bobot_balance.slx and press Run.
+% The block diagram follows the firmware: speed estimate lag,
 % outer speed PI loop giving a lean target, inner angle PD loop, back-EMF feed-forward, PWM limit
 % and the control delay.
 %
@@ -102,5 +103,39 @@ ln('vcmd/1',      'scope_speed/1');
 ln('split/1',     'scope_speed/2');
 ln('split/2',     'scope_pitch/1');
 
-save_system(mdl, fullfile(fileparts(mfilename('fullpath')), [mdl '.slx']));
-fprintf('Saved %s.slx. Press Run in the model window (workspace variables A, B, x0, kp, kd ... are already set).\n', mdl);
+% tidy the layout (optional, needs R2016a or newer)
+try
+    Simulink.BlockDiagram.arrangeSystem(mdl);
+catch
+    fprintf('Note: could not auto-arrange the blocks; move them by hand if the layout looks crowded.\n');
+end
+
+here = fileparts(mfilename('fullpath'));
+if ~exist(fullfile(here,'results_matlab'),'dir'), mkdir(fullfile(here,'results_matlab')); end
+save_system(mdl, fullfile(here, [mdl '.slx']));
+fprintf('Saved %s.slx\n', mdl);
+
+% picture of the block diagram for the README
+try
+    print(['-s' mdl], '-dpng', '-r150', fullfile(here, 'results_matlab', 'bobot_balance_model.png'));
+    fprintf('Saved results_matlab/bobot_balance_model.png\n');
+catch
+    fprintf('Note: could not export the model picture. In Simulink, use File > Print > Export, or take a screenshot.\n');
+end
+
+%% run it and plot
+simOut = sim(mdl, 'ReturnWorkspaceOutputs', 'on');
+v   = simOut.get('out_v');     phi = simOut.get('out_phi');     duty = simOut.get('out_duty');
+figure('Position', [100 100 760 640]);
+subplot(3,1,1); plot(v.Time, v.Data, 'LineWidth', 1.6); grid on; ylabel('speed (m/s)'); title('bobot\_balance: start 3 deg off, speed command 0.2 m/s at 0.5 s');
+subplot(3,1,2); plot(phi.Time, phi.Data*s2d, 'LineWidth', 1.6); grid on; ylabel('pitch from balance point (deg)');
+subplot(3,1,3); plot(duty.Time, duty.Data*255, 'LineWidth', 1.6); grid on; ylabel('PWM (of 255)'); xlabel('time (s)');
+saveas(gcf, fullfile(here, 'results_matlab', 'bobot_balance_simulink_results.png'));
+
+% quick sanity checks (the Python model gives about 0.2 m/s and a pitch that settles to 0 within 2 s of the command)
+v_end = v.Data(end);  phi_end = phi.Data(end)*s2d;
+fprintf('\nSIMULINK CHECK\n');
+if abs(v_end - 0.2) < 0.02, fprintf('  PASS  final speed %.3f m/s (expected about 0.2)\n', v_end); else, fprintf('  FAIL  final speed %.3f m/s (expected about 0.2)\n', v_end); end
+if abs(phi_end) < 0.5,      fprintf('  PASS  final pitch %.2f deg (expected about 0)\n', phi_end); else, fprintf('  FAIL  final pitch %.2f deg (expected about 0)\n', phi_end); end
+if max(abs(phi.Data))*s2d < 6, fprintf('  PASS  pitch stays within 6 deg\n'); else, fprintf('  FAIL  pitch went beyond 6 deg\n'); end
+fprintf('Done. Open %s.slx to see the model, and results_matlab/ for the pictures.\n', mdl);

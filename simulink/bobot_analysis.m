@@ -37,6 +37,12 @@ Bv = [0;0;0;1;0];
 [Acl, Bcl, Kz, Kv] = bobot_closed(Aa, Ba, Bv, kp, kd, kp_v, ki_v, s2d, kff, emf, Vb, Td);
 fprintf('Closed-loop poles (with %.1f ms delay):\n', Td*1e3); disp(eig(Acl));
 
+% Self-check against the verified Python calculation (python/bobot_linear_model.py)
+fprintf('\nSELF-CHECK (compares with the Python results):\n');
+nfail = 0;
+nfail = nfail + chk('open-loop poles', sort(real(eig(A))), [-29.961; -9.384; 10.564], 0.05, 0);
+nfail = nfail + chk('closed-loop poles', sort(real(eig(Acl))), [-504.16; -90.93; -8.235; -8.235; -1.420; -0.0665], 0.01, 0.02);
+
 %% 3. Figure 1: pole maps
 p0 = eig(A);  p1 = eig(Acl);
 figure('Position',[100 100 900 360]);
@@ -91,6 +97,10 @@ i0 = find(abs(G(1:end-1))>1 & abs(G(2:end))<=1, 1);
 if ~isempty(i0), fprintf('Angle loop: crossover %.0f rad/s, phase margin %.0f deg (no delay), %.0f deg with delay\n', ...
         w(i0), 180+unwrap(angle(G(i0)))*s2d, 180+unwrap(angle(Ld(i0)))*s2d); end
 saveas(gcf, 'results_matlab/04_angle_loop_bode.png');
+if ~isempty(i0)
+    nfail = nfail + chk('phase margin, no delay (deg)', 180+unwrap(angle(G(i0)))*s2d, 46.3, 1.0, 0);
+    nfail = nfail + chk('phase margin, with delay (deg)', 180+unwrap(angle(Ld(i0)))*s2d, 31.8, 1.0, 0);
+end
 
 %% 7. Figure 5: gain sweeps
 kps = 0:0.5:150;  P = zeros(numel(kps), 6);
@@ -109,6 +119,8 @@ end
 subplot(1,2,2); plot(kds, mx, 'LineWidth', 1.6); grid on; yline(0); xline(kd, '--r'); ylim([-1 3]);
 xlabel('kd'); ylabel('largest real part of any pole (1/s)'); title('Stability against kd (kp = 55)');
 saveas(gcf, 'results_matlab/05_gain_sweeps.png');
+nfail = nfail + chk('smallest stable kp', kps(find(stable,1,'first')), 16.5, 1.0, 0);
+nfail = nfail + chk('largest stable kp', kps(find(stable,1,'last')), 121, 1.5, 0);
 
 %% 8. Figure 6: battery voltage
 figure('Position',[100 100 600 400]); hold on;
@@ -135,9 +147,24 @@ for th0 = [3 8 14]
 end
 grid on; legend; xlabel('time (s)'); ylabel('angle from balance point (deg)'); title('Solid: nonlinear model. Dotted: linear model');
 saveas(gcf, 'results_matlab/07_nonlinear_recovery.png');
+if nfail == 0
+    fprintf('\nSELF-CHECK PASSED: the MATLAB results agree with the Python results.\n');
+else
+    fprintf('\nSELF-CHECK: %d item(s) differ. Send me the output above so I can find the cause.\n', nfail);
+end
 fprintf('Done. Figures are in results_matlab/.\n');
 
 %% ---- local functions ----
+function bad = chk(name, got, want, abs_tol, rel_tol)
+% PASS when every value is within abs_tol + rel_tol*|want| of the Python result.
+    if numel(got) ~= numel(want)
+        ok = false;
+    else
+        ok = all(abs(got(:) - want(:)) <= abs_tol + rel_tol*abs(want(:)));
+    end
+    if ok, fprintf('  PASS  %s\n', name); bad = 0; else, fprintf('  FAIL  %s\n', name); bad = 1; end
+end
+
 function sys = ss_obj(A, B)
     sys = ss(A, B, eye(size(A,1)), zeros(size(A,1), size(B,2)));
 end
