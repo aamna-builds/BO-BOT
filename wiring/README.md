@@ -17,6 +17,12 @@ flowchart TD
     M2 -. encoder A/B .-> ESP
 ```
 
+## Wiring diagram
+
+![BO-BOT wiring diagram](wiring-diagram.png)
+
+The picture is drawn from the pin map below by [`draw_wiring.py`](draw_wiring.py). If you change a pin, update the script and run it again.
+
 ## Pin map (ESP32 DevKit)
 These pins match [`firmware/balance_bot/include/config.h`](../firmware/balance_bot/include/config.h). If you change a pin,
 change it in both places.
