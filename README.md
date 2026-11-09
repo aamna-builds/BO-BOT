@@ -9,6 +9,7 @@ Mechanical design, electronics, firmware, simulation and documentation, all in o
 
 <br>
 
+[![CI](https://github.com/aamna-builds/BO-BOT/actions/workflows/ci.yml/badge.svg)](https://github.com/aamna-builds/BO-BOT/actions/workflows/ci.yml)
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 ![Controller](https://img.shields.io/badge/controller-ESP32-blue)
 ![CAD](https://img.shields.io/badge/CAD-Fusion%20360-0696D7)
