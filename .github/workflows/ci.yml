@@ -35,3 +35,24 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Robot balances, survives a push and drives
         run: python simulation/tools/smoke_test.py simulation/web/index.html
+
+  firmware-tests:
+    name: Firmware tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Controller and face match the simulator
+        working-directory: firmware/test
+        run: |
+          g++ -std=c++17 -O2 -Wall -Wextra -o test_controller test_controller.cpp
+          g++ -std=c++17 -O2 -Wall -Wextra -o test_face test_face.cpp
+          ./test_controller
+          ./test_face
+      - name: main.cpp syntax check (stand-in Arduino headers)
+        working-directory: firmware
+        run: |
+          for core in 2 3; do
+            g++ -std=gnu++17 -fsyntax-only -Wall -Wextra -DESP_ARDUINO_VERSION_MAJOR=$core -Itest/stubs -Ibalance_bot/include balance_bot/src/main.cpp
+          done

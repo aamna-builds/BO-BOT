@@ -136,9 +136,9 @@ Each folder has its own README describing what belongs there.
 | CAD | Alternative body and layout designs | Planned |
 | Simulation | Rough web simulator with live gain tuning and video recording | Prototype done |
 | Simulation | Controller tuning and validation against hardware | Planned |
-| Electronics | Final component selection and wiring pin map | Planned |
-| Firmware | IMU filter, balance controller, motor and encoder drivers | Planned |
-| Firmware | OLED face animations | Planned |
+| Electronics | Final component selection and wiring pin map | Pin map done |
+| Firmware | IMU filter, balance controller, motor and encoder drivers | Written, not yet run on hardware |
+| Firmware | OLED face animations | Written, not yet run on hardware |
 | Hardware | Thermocol casing build | Planned |
 | Media | Build photos and demo video | Planned |
 
