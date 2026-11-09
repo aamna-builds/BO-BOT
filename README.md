@@ -116,7 +116,7 @@ BO-BOT/
 ├── cad/            Fusion 360 scripts and exported CAD files
 ├── firmware/       ESP32 code
 ├── simulation/     Simulations and tuning results
-├── simulink/       Simulink models
+├── simulink/       MATLAB / Simulink model, equations, graphs
 ├── hardware/       Mechanical build notes (casing, assembly)
 ├── electronics/    Power design, schematics, layouts
 ├── wiring/         Wiring diagrams and pin map
@@ -135,6 +135,7 @@ Each folder has its own README describing what belongs there.
 | CAD | Export `.f3d` / `.step` and renders | In progress |
 | CAD | Alternative body and layout designs | Planned |
 | Simulation | Rough web simulator with live gain tuning and video recording | Prototype done |
+| Maths | Linear model, stability analysis and graphs ([equations](docs/equations.md), [`simulink/`](simulink/)) | Done in Python; MATLAB and Simulink files written, not yet run |
 | Simulation | Controller tuning and validation against hardware | Planned |
 | Electronics | Final component selection and wiring pin map | Pin map done |
 | Firmware | IMU filter, balance controller, motor and encoder drivers | Written, not yet run on hardware |
