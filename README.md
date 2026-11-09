@@ -61,6 +61,9 @@ close to the axle, drivers and sensors sit on the middle platform, and the ESP32
 
 The earlier [thermocol casing version](docs/images/design-sheet-thermocol.png) is kept for reference.
 
+> The sheets above were drawn for a 0.96" display. The build uses a **1.3" SH1106 OLED**, and the CAD model
+> (`cad/`) has been updated for it.
+
 ## Simulation
 
 A browser-based 3D simulator lets you drive the robot, push it, tune the controller gains live and record video.
@@ -83,7 +86,7 @@ Details are in [`simulation/README.md`](simulation/README.md).
 | **Controller** | ESP32 development board |
 | **Motion sensing** | MPU-6050 (accelerometer + gyroscope, I2C) |
 | **Actuation** | 2 x N20 geared motors with encoders, driven by a DRV8833 |
-| **Display** | 0.96" OLED (I2C), fixed eyes with an animated mouth |
+| **Display** | 1.3" OLED, SH1106 (I2C), fixed eyes with an animated mouth |
 | **Power** | 2S 1000 mAh LiPo (7.4 V) with a 5 V / 3 A buck converter |
 | **Casing** | Thermocol (5-8 mm) prototype |
 
@@ -95,7 +98,7 @@ flowchart TD
     BAT --> MSUP["Motor supply (6 V)"]
     BUCK --> ESP["ESP32 (controller)"]
     ESP <-->|I2C| MPU["MPU-6050 (IMU)"]
-    ESP <-->|I2C| OLED["OLED 0.96in"]
+    ESP <-->|I2C| OLED["OLED 1.3in"]
     ESP <--> DRV["DRV8833 (motor driver)"]
     MSUP --> DRV
     DRV --> M1["Motor 1 + encoder"]

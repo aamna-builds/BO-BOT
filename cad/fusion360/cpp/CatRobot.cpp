@@ -228,7 +228,7 @@ static Body make_shell()
     Body body = cut(outer_t, inner_t);                 // hollow, open at bottom
     for (int s = -1; s <= 1; s += 2)                   // wheel arches
         body = cut(body, cyl(s * 28, 17, 0, s * 46, 17, 0, 19));
-    body = cut(body, box(0, 67, 24, 22.5, 11.3, 20));  // OLED window
+    body = cut(body, box(0, 67, 24, 30.4, 15.2, 20));  // OLED window (1.3in)
 
     const double SPLIT = 40.0;
     Body low = inter(tbm->copy(body), box(0, SPLIT / 2 - 5, 0, 200, SPLIT + 10, 200));
@@ -241,7 +241,7 @@ static Body make_shell()
 static void make_bezel()
 {
     Ptr<Component> c = newocc("Face_Bezel");
-    Body b = cut(box(0, 67, 24.0, 30, 18, 4.0), box(0, 67, 24.0, 22.5, 11.3, 12));
+    Body b = cut(box(0, 67, 23.65, 38, 23, 5.3), box(0, 67, 23.65, 30.4, 15.2, 12));
     add(c, b, "Bezel", &BLACK);
 }
 
@@ -374,7 +374,7 @@ static void make_drv()
 static void make_buck()
 {
     Ptr<Component> c = newocc("DCDC_Buck");
-    double y = 43.2, cx = -18, cz = 10.5;
+    double y = 43.2, cx = -20, cz = 10.5;   // moved 2 mm to clear the 1.3in OLED board
     add(c, box(cx, y + 0.8, cz, 26.4, 1.6, 15),       "Buck_PCB_26.4x15", &RED);
     add(c, box(cx - 4, y + 4.5, cz, 10, 5.8, 10),     "Buck_Inductor", &SILVER);
     add(c, box(cx + 8, y + 3.6, cz, 6, 4, 8),         "Buck_Capacitor", &BLACK);
@@ -382,18 +382,19 @@ static void make_buck()
 
 static void make_oled()
 {
-    Ptr<Component> c = newocc("OLED_0.96in");
-    add(c, box(0, 64, 15.8, 27, 28, 1.6),              "OLED_PCB_27x28", &BLACK);
-    add(c, box(0, 67, 16.9, 24, 13, 0.6),              "OLED_Glass", &GLASS);
-    add(c, box(0, 67, 17.275, 21.74, 10.86, 0.15),     "OLED_ActiveArea_21.74x10.86", &ACTIVE);
-    add(c, box(0, 51.6, 13.75, 10, 2.5, 2.5),          "OLED_Header", &BLACK);
+    // 1.3in SH1106 I2C module: board ~35.4 x 33.5 mm, active area 29.42 x 14.7 mm (seller listings; verify with calipers)
+    Ptr<Component> c = newocc("OLED_1.3in");
+    add(c, box(0, 64.5, 15.8, 35.4, 33.5, 1.6),        "OLED_PCB_35.4x33.5", &BLACK);
+    add(c, box(0, 67, 16.9, 34.5, 19, 0.6),            "OLED_Glass", &GLASS);
+    add(c, box(0, 67, 17.275, 29.42, 14.7, 0.15),      "OLED_ActiveArea_29.42x14.7", &ACTIVE);
+    add(c, box(0, 49.35, 13.75, 10, 2.5, 2.5),         "OLED_Header", &BLACK);
 
     // Blue dot-matrix face (happy eyes + smile), as in the reference picture
     Ptr<Component> f = newocc("OLED_Face_Dots");
     int n = 0;
-    const double ZB = 17.35, ZT = 17.6, R = 0.55;
+    const double ZB = 17.35, ZT = 17.6, R = 0.7;
     for (int s = -1; s <= 1; s += 2) {                // eyes: arcs, opening downward
-        double ex = s * 5.6, ey = 68.0, er = 2.7;
+        double ex = s * 7.6, ey = 68.4, er = 3.7;
         for (int k = 0; k < 7; ++k) {
             double a = (20.0 + 140.0 * k / 6.0) * PI_ / 180.0;
             double x = ex + er * std::cos(a), y = ey + er * std::sin(a);
@@ -402,13 +403,13 @@ static void make_oled()
     }
     for (int k = 0; k < 9; ++k) {                     // smile
         double a = (230.0 + 80.0 * k / 8.0) * PI_ / 180.0;
-        double x = 4.6 * std::cos(a), y = 69.8 + 4.6 * std::sin(a);
+        double x = 6.2 * std::cos(a), y = 70.8 + 6.2 * std::sin(a);
         add(f, cyl(x, y, ZB, x, y, ZT, R), "Dot_" + std::to_string(++n), &DOT);
     }
 
     Ptr<Component> m = newocc("OLED_Mount");
     for (int s = 1; s >= -1; s -= 2)
-        add(m, box(s * 11, 64, 14.25, 4, 4, 1.5), (s > 0) ? "OLED_Mount_R" : "OLED_Mount_L", &WHITE);
+        add(m, box(s * 14.5, 64.5, 14.25, 4, 4, 1.5), (s > 0) ? "OLED_Mount_R" : "OLED_Mount_L", &WHITE);
 }
 
 // ------------------------------------------------------------ run

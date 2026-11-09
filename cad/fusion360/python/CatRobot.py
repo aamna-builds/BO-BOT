@@ -185,7 +185,7 @@ def make_shell():
     body = cut(outer_t, inner_t)                     # hollow, open at bottom
     for s in (1, -1):                                # wheel arches
         body = cut(body, cyl((s * 28, 17, 0), (s * 46, 17, 0), 19))
-    body = cut(body, box(0, 67, 24, 22.5, 11.3, 20))  # OLED window
+    body = cut(body, box(0, 67, 24, 30.4, 15.2, 20))  # OLED window (1.3in: active area 29.42 x 14.7 + margin)
 
     SPLIT = 40.0
     low = inter(tbm.copy(body), box(0, SPLIT / 2 - 5, 0, 200, SPLIT + 10, 200))
@@ -199,7 +199,7 @@ def make_shell():
 
 def make_bezel():
     c = newocc('Face_Bezel').component
-    b = cut(box(0, 67, 24.0, 30, 18, 4.0), box(0, 67, 24.0, 22.5, 11.3, 12))
+    b = cut(box(0, 67, 23.65, 38, 23, 5.3), box(0, 67, 23.65, 30.4, 15.2, 12))
     add(c, b, 'Bezel', BLACK)
 
 
@@ -317,21 +317,22 @@ def make_drv():
 
 def make_buck():
     c = newocc('DCDC_Buck').component
-    y, cx, cz = 43.2, -18, 10.5
+    y, cx, cz = 43.2, -20, 10.5   # cx moved 2 mm to clear the 1.3in OLED board
     add(c, box(cx, y + 0.8, cz, 26.4, 1.6, 15), 'Buck_PCB_26.4x15', RED)
     add(c, box(cx - 4, y + 4.5, cz, 10, 5.8, 10), 'Buck_Inductor', SILVER)
     add(c, box(cx + 8, y + 3.6, cz, 6, 4, 8), 'Buck_Capacitor', BLACK)
 
 
 def make_oled():
-    c = newocc('OLED_0.96in').component
-    add(c, box(0, 64, 15.8, 27, 28, 1.6), 'OLED_PCB_27x28', BLACK)
-    add(c, box(0, 67, 16.9, 24, 13, 0.6), 'OLED_Glass', (20, 20, 25))
-    add(c, box(0, 67, 17.275, 21.74, 10.86, 0.15), 'OLED_ActiveArea_21.74x10.86', (10, 25, 80))
-    add(c, box(0, 51.6, 13.75, 10, 2.5, 2.5), 'OLED_Header', BLACK)
+    # 1.3in SH1106 I2C module: board ~35.4 x 33.5 mm, active area 29.42 x 14.7 mm (seller listings; verify with calipers)
+    c = newocc('OLED_1.3in').component
+    add(c, box(0, 64.5, 15.8, 35.4, 33.5, 1.6), 'OLED_PCB_35.4x33.5', BLACK)
+    add(c, box(0, 67, 16.9, 34.5, 19, 0.6), 'OLED_Glass', (20, 20, 25))
+    add(c, box(0, 67, 17.275, 29.42, 14.7, 0.15), 'OLED_ActiveArea_29.42x14.7', (10, 25, 80))
+    add(c, box(0, 49.35, 13.75, 10, 2.5, 2.5), 'OLED_Header', BLACK)
     m = newocc('OLED_Mount').component
     for s in (1, -1):
-        add(m, box(s * 11, 64, 14.25, 4, 4, 1.5), 'OLED_Mount_' + ('R' if s > 0 else 'L'), WHITE)
+        add(m, box(s * 14.5, 64.5, 14.25, 4, 4, 1.5), 'OLED_Mount_' + ('R' if s > 0 else 'L'), WHITE)
 
 
 # ------------------------------------------------------------ run

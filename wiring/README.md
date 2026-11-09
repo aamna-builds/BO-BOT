@@ -8,7 +8,7 @@ flowchart TD
     BAT --> MSUP["Motor supply (6 V)"]
     BUCK --> ESP["ESP32 (controller)"]
     ESP <-->|I2C| MPU["MPU-6050 (IMU)"]
-    ESP <-->|I2C| OLED["OLED 0.96in"]
+    ESP <-->|I2C| OLED["OLED 1.3in"]
     ESP <--> DRV["DRV8833 (motor driver)"]
     MSUP --> DRV
     DRV --> M1["M1 (encoder)"]

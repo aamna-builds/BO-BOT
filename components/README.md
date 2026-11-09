@@ -6,7 +6,7 @@
 |---|---|---|---|---|
 | 1 | GA12-N20 6 V 300 RPM micro DC reducer motor with encoder | 2 | Drive wheels and speed feedback | 10 x 12 mm |
 | 2 | White wheel tyre for N20 motor | 2 | Wheels | 34 mm dia |
-| 3 | 1.3" I2C 4-pin OLED, blue (SH1106) | 1 | Robot face | |
+| 3 | 1.3" I2C 4-pin OLED, blue (SH1106) | 1 | Robot face | 35.4 x 33.5 mm board |
 | 4 | Compact balance charger, 2S-3S (IMAX B3 AC Pro) | 1 | Charging the LiPo | |
 | 5 | DRV8833 two-way motor driver module | 1 | Drives both motors | 20 x 15 mm |
 | 6 | MPU-6050 gyro + accelerometer breakout | 1 | Tilt sensing | 20 x 15 mm |
@@ -19,9 +19,9 @@
 
 **Total cost (all of the above, taxes and shipping included): Rs 4,058.78**
 
-> **Design check:** the CAD model and design sheets assume a **0.96" OLED** (27 x 28 mm board), but the purchased
-> display is a **1.3" SH1106**, which has a larger board. The face window and top deck need to be checked against the
-> real display before building the shell.
+> **Display size:** the CAD model uses the **1.3" SH1106** (board about 35.4 x 33.5 mm, active area 29.42 x 14.7 mm,
+> taken from seller listings). The older design sheets in `docs/images/` still show a 0.96" display. Measure the real
+> board with calipers when it arrives and update the CAD if it differs.
 
 ## Build materials (not in the purchase list above)
 
