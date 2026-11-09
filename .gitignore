@@ -1,0 +1,26 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Build output
+build/
+.pio/
+*.o
+*.dll
+*.dylib
+
+# MATLAB / Simulink autosave
+*.asv
+*.autosave
+slprj/
+*.slxc
+
+# Fusion 360 temp
+*.f3z.tmp

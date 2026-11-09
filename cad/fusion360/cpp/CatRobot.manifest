@@ -1,0 +1,13 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "5b1f0e3a-7c2d-4e8a-9a41-3c6d2f8b7e10",
+    "author": "",
+    "description": {
+        "": "Self-balancing cat robot (thermocol prototype) - parametric CAD model"
+    },
+    "version": "1.0",
+    "runOnStartup": false,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}
