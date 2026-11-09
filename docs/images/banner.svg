@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="BO-BOT: Self-Balancing Cat Robot">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#141f38"/>
+      <stop offset="1" stop-color="#2b4a80"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="320" fill="url(#bg)"/>
+  <g opacity="0.08" stroke="#ffffff" stroke-width="1">
+    <path d="M0 80H1200M0 160H1200M0 240H1200M300 0V320M600 0V320M900 0V320"/>
+  </g>
+  <line x1="40" y1="298" x2="1160" y2="298" stroke="#8fb4e8" stroke-opacity="0.35" stroke-width="2"/>
+
+  <!-- robot -->
+  <g>
+    <circle cx="165" cy="262" r="34" fill="#17181c"/>
+    <circle cx="165" cy="262" r="19" fill="#f4f6fa"/>
+    <circle cx="165" cy="262" r="5" fill="#9aa4b5"/>
+    <circle cx="315" cy="262" r="34" fill="#17181c"/>
+    <circle cx="315" cy="262" r="19" fill="#f4f6fa"/>
+    <circle cx="315" cy="262" r="5" fill="#9aa4b5"/>
+
+    <polygon points="168,78 172,22 220,56" fill="#f4f6fa"/>
+    <polygon points="178,70 180,40 207,58" fill="#46aaff"/>
+    <polygon points="312,78 308,22 260,56" fill="#f4f6fa"/>
+    <polygon points="302,70 300,40 273,58" fill="#46aaff"/>
+
+    <ellipse cx="240" cy="160" rx="92" ry="108" fill="#f4f6fa"/>
+    <rect x="188" y="108" width="104" height="58" rx="9" fill="#0b1220"/>
+    <g fill="none" stroke="#5cc4ff" stroke-width="5" stroke-linecap="round" stroke-dasharray="0.1 8">
+      <path d="M203 133 Q214 114 225 133"/>
+      <path d="M255 133 Q266 114 277 133"/>
+      <path d="M220 143 Q240 162 260 143"/>
+    </g>
+    <g stroke="#cfd8e6" stroke-width="2" stroke-linecap="round">
+      <path d="M182 118L156 110M182 128L154 128M182 138L156 146"/>
+      <path d="M298 118L324 110M298 128L326 128M298 138L324 146"/>
+    </g>
+    <polygon points="240,196 212,182 212,210" fill="#46aaff"/>
+    <polygon points="240,196 268,182 268,210" fill="#46aaff"/>
+    <circle cx="240" cy="196" r="7" fill="#2f86d8"/>
+  </g>
+
+  <!-- title -->
+  <text x="470" y="142" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="96" font-weight="800" fill="#ffffff" letter-spacing="4">BO-BOT</text>
+  <text x="474" y="190" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="34" font-weight="600" fill="#8fd0ff">Self-Balancing Cat Robot</text>
+  <text x="474" y="232" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" fill="#b8c7dc">ESP32  ·  Inverted Pendulum Control  ·  Fusion 360 CAD  ·  Simulation</text>
+</svg>

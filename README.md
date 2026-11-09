@@ -1,43 +1,125 @@
-# BO-BOT: Self-Balancing Cat Robot
+<div align="center">
 
-An ESP32-based self-balancing (inverted pendulum) robot with a cat-shaped thermocol casing and an animated OLED face.
-This repository holds **everything** for the project: CAD, firmware, simulation, electronics, wiring, hardware
-build notes, components, and photos/videos. It is updated as the project grows.
+<img src="docs/images/banner.svg" alt="BO-BOT: Self-Balancing Cat Robot" width="100%">
 
-![Reference sheet](docs/images/reference-sheet.png)
+<br>
 
-## Key specs
-| Item | Value |
+**A two-wheeled, self-balancing robot with a cat-shaped casing and an animated OLED face.**<br>
+Mechanical design, electronics, firmware, simulation and documentation, all in one place.
+
+<br>
+
+![Status](https://img.shields.io/badge/status-in%20development-orange)
+![Controller](https://img.shields.io/badge/controller-ESP32-blue)
+![CAD](https://img.shields.io/badge/CAD-Fusion%20360-0696D7)
+![Languages](https://img.shields.io/badge/code-C%2B%2B%20%7C%20Python%20%7C%20MATLAB-informational)
+
+[About](#about) ·
+[Design](#design) ·
+[Specifications](#specifications) ·
+[Architecture](#system-architecture) ·
+[Repository](#repository-structure) ·
+[Roadmap](#roadmap)
+
+</div>
+
+---
+
+## About
+
+BO-BOT is an **inverted-pendulum robot**: it stands upright on two wheels and keeps its balance by continuously
+measuring its tilt and driving the wheels to correct it. The body is a compact cat-shaped casing, first built as a
+low-cost **thermocol prototype**, with a small OLED screen that shows a fixed pair of eyes and an animated mouth
+(happy, talking, surprised, sad).
+
+The project covers the full engineering workflow:
+
+- **Mechanical:** parametric CAD, layered chassis, casing design and build
+- **Electronics:** power distribution, motor driving, sensing and wiring
+- **Control:** balance controller, tuned with simulation before running on hardware
+- **Software:** ESP32 firmware, OLED face animation
+- **Documentation:** bill of materials, wiring, build photos and videos
+
+## Design
+
+<p align="center">
+  <img src="docs/images/reference-sheet.png" alt="BO-BOT design reference sheet" width="95%">
+</p>
+
+The design is a three-platform chassis inside an egg-shaped cat shell. The battery sits low to keep the centre of mass
+close to the axle, drivers and sensors sit on the middle platform, and the ESP32 and OLED face sit at the top.
+
+## Specifications
+
+| | |
 |---|---|
-| Body (H x W x D) | ~110 x 80 x 55 mm |
-| Wheels | 34 mm dia x 6.5 mm, 70 mm track |
-| Platform spacing | 20 / 20 / 18 mm |
-| Controller | ESP32 dev board |
-| IMU | MPU-6050 (I2C) |
-| Motor driver | DRV8833 |
-| Motors | 2x N20 with encoder |
-| Power | 2S 1000 mAh LiPo (7.4 V) + 5 V DC-DC buck |
-| Display | 0.96" OLED (I2C), fixed eyes + animated mouth |
-| Casing | Thermocol (5-8 mm) prototype |
+| **Size (H x W x D)** | about 110 x 80 x 55 mm |
+| **Wheels** | 34 mm diameter, 6.5 mm wide, 70 mm track |
+| **Platform spacing** | 20 / 20 / 18 mm |
+| **Controller** | ESP32 development board |
+| **Motion sensing** | MPU-6050 (accelerometer + gyroscope, I2C) |
+| **Actuation** | 2 x N20 geared motors with encoders, driven by a DRV8833 |
+| **Display** | 0.96" OLED (I2C), fixed eyes with an animated mouth |
+| **Power** | 2S 1000 mAh LiPo (7.4 V) with a 5 V / 3 A buck converter |
+| **Casing** | Thermocol (5-8 mm) prototype |
 
-## Repository layout
-| Folder | What goes here |
-|---|---|
-| [`cad/`](cad/) | Fusion 360 scripts (Python + C++), exported `.f3d` / `.step` / `.stl` files |
-| [`firmware/`](firmware/) | ESP32 code (balancing controller, motor/encoder, OLED face) |
-| [`simulation/`](simulation/) | Python / MATLAB / web simulations and tuning results |
-| [`simulink/`](simulink/) | Simulink models (`.slx`) and related scripts |
-| [`hardware/`](hardware/) | Mechanical build notes: thermocol casing, assembly steps, drawings |
-| [`electronics/`](electronics/) | Schematics, power design, PCB / breadboard layouts |
-| [`wiring/`](wiring/) | Wiring diagrams and pin maps |
-| [`components/`](components/) | Bill of materials, datasheets, suppliers |
-| [`media/`](media/) | Photos and videos of the build and demos |
-| [`docs/`](docs/) | Reports, project log, reference images |
+## System architecture
 
-## Status
-See [`docs/project-log.md`](docs/project-log.md) for progress and the to-do list.
+```mermaid
+flowchart TD
+    BAT["7.4 V LiPo (2S, 1000 mAh)"] --> BUCK["DC-DC Buck (5 V, 3 A)"]
+    BAT --> MSUP["Motor supply (6 V)"]
+    BUCK --> ESP["ESP32 (controller)"]
+    ESP <-->|I2C| MPU["MPU-6050 (IMU)"]
+    ESP <-->|I2C| OLED["OLED 0.96in"]
+    ESP <--> DRV["DRV8833 (motor driver)"]
+    MSUP --> DRV
+    DRV --> M1["Motor 1 + encoder"]
+    DRV --> M2["Motor 2 + encoder"]
+```
 
-## Contributing / workflow
-- Keep one topic per commit with a clear message.
-- Put large binaries (videos, CAD exports) in their folders; avoid committing files over ~50 MB.
-- Update the folder README when you add something new.
+**Control idea:** the MPU-6050 gives the tilt angle, a filter combines the accelerometer and gyroscope, and the
+controller turns the angle error into motor commands many times per second. Encoders on both motors provide speed
+feedback.
+
+## Repository structure
+
+```
+BO-BOT/
+├── cad/            Fusion 360 scripts and exported CAD files
+├── firmware/       ESP32 code
+├── simulation/     Simulations and tuning results
+├── simulink/       Simulink models
+├── hardware/       Mechanical build notes (casing, assembly)
+├── electronics/    Power design, schematics, layouts
+├── wiring/         Wiring diagrams and pin map
+├── components/     Bill of materials and datasheets
+├── media/          Photos and videos
+└── docs/           Reports, project log, images
+```
+
+Each folder has its own README describing what belongs there.
+
+## Roadmap
+
+| Area | Task | Status |
+|---|---|---|
+| CAD | Parametric Fusion 360 model of the robot | Done |
+| CAD | Export `.f3d` / `.step` and renders | In progress |
+| CAD | Alternative body and layout designs | Planned |
+| Simulation | Inverted-pendulum model and controller tuning | Planned |
+| Electronics | Final component selection and wiring pin map | Planned |
+| Firmware | IMU filter, balance controller, motor and encoder drivers | Planned |
+| Firmware | OLED face animations | Planned |
+| Hardware | Thermocol casing build | Planned |
+| Media | Build photos and demo video | Planned |
+
+Detailed progress is tracked in [`docs/project-log.md`](docs/project-log.md).
+
+## Components
+
+The full parts list with sizes and sources is in [`components/`](components/).
+
+## Gallery
+
+Build photos, renders and demo videos will appear here as the project progresses. See [`media/`](media/).
