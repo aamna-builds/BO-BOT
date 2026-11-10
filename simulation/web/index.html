@@ -600,6 +600,7 @@ class Sim {
     for (let i = 0; i < 200; i++) { for (let j = 0; j < per; j++) { this.mpu.update(pl, dt); pl.t += dt; } samples.push(this.mpu.read(0)); }
     this.ctrl.calibrate(samples);
     const th0 = th0deg * PI / 180; pl.x[ITH] = th0; pl.x[IAL] = pl.x[IAR] = th0; pl.t = 0;
+    this.pushF = 0; this.pushUntil = 0;  // a push still pending from before the reset would knock it over again
     this.nextCtrl = 0; this.pending = null; this.duty = [0, 0, true];
     for (const k in this.log) this.log[k].clear();
     this.maxTraction = 0;
