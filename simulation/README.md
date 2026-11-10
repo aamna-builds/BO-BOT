@@ -29,7 +29,7 @@ gear backlash, IMU position and extra weight while it runs.
 ### Run it online (GitHub Pages)
 A workflow (`.github/workflows/pages.yml`) publishes the simulator from `simulation/web/` whenever it changes.
 Switch it on once: on GitHub open **Settings, Pages**, and under **Build and deployment** set **Source** to **GitHub Actions**.
-The page then appears at `https://aamna-builds.github.io/BO-BOT/`.
+The page then appears at `https://aamna-builds.github.io/Bo-Bot-V2/`.
 
 ### Record a video
 Click **Record** (top right of the 3D view), use the simulator, then click **Stop & save**. The browser downloads a
