@@ -1,8 +1,8 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>BO-BOT · Balance Bench</title>
 <meta name="description" content="Browser simulator for BO-BOT, a self-balancing cat robot: drive it, push it, tune the ESP32 controller gains live.">
-<meta name="theme-color" content="#d9692a">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d9692a'/%3E%3Ccircle cx='11' cy='14' r='3.2' fill='%23fff'/%3E%3Ccircle cx='21' cy='14' r='3.2' fill='%23fff'/%3E%3Cpath d='M11 22q5 4 10 0' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#2a6fdb">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a6fdb'/%3E%3Ccircle cx='11' cy='14' r='3.2' fill='%23fff'/%3E%3Ccircle cx='21' cy='14' r='3.2' fill='%23fff'/%3E%3Cpath d='M11 22q5 4 10 0' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap">
 <style>
@@ -14,11 +14,11 @@
   --ink: #1b232c;
   --muted: #5d6b79;
   --line: #d3dae1;
-  --pla: #d4692a;         /* printed-part orange, the accent */
+  --pla: #2a6fdb;         /* printed-part blue, the accent */
   --pla-ink: #ffffff;
   --oled: #46b4f0;        /* SH1106 blue */
   --oled-bg: #0b1016;
-  --trace-a: #d4692a; --trace-b: #2b8fd6; --trace-c: #8a5cd1;
+  --trace-a: #e0762c; --trace-b: #2b8fd6; --trace-c: #8a5cd1;
   --good: #23885a; --warn: #b7791f; --bad: #c8382e;
   --sky: #dce4ec; --floor-a: #bfb6a4; --floor-b: #b1a792;
   --pad: rgba(255,255,255,.78); --pad-ink: #1b232c;
@@ -28,17 +28,17 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #12171d; --panel: #171d24; --card: #1d252e; --ink: #e4e9ee; --muted: #93a1af; --line: #2c3743;
-  --pla: #ec8a4a; --pla-ink: #1a0f08; --oled: #5cc4ff; --oled-bg: #05080c;
-  --trace-a: #f09a5c; --trace-b: #5cb8f5; --trace-c: #b08cf0;
+  --pla: #5aa2ff; --pla-ink: #06101f; --oled: #5cc4ff; --oled-bg: #05080c;
+  --trace-a: #f0a062; --trace-b: #5cb8f5; --trace-c: #b08cf0;
   --good: #49c189; --warn: #e3a64a; --bad: #f06a5e;
-  --sky: #1b2530; --floor-a: #3a3f45; --floor-b: #33383e; --pad: rgba(23,29,36,.82); --pad-ink: #e4e9ee;
+  --sky: #15202d; --floor-a: #2b3a50; --floor-b: #25324a; --pad: rgba(23,29,36,.82); --pad-ink: #e4e9ee;
   color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #12171d; --panel: #171d24; --card: #1d252e; --ink: #e4e9ee; --muted: #93a1af; --line: #2c3743;
-  --pla: #ec8a4a; --pla-ink: #1a0f08; --oled: #5cc4ff; --oled-bg: #05080c;
-  --trace-a: #f09a5c; --trace-b: #5cb8f5; --trace-c: #b08cf0;
+  --pla: #5aa2ff; --pla-ink: #06101f; --oled: #5cc4ff; --oled-bg: #05080c;
+  --trace-a: #f0a062; --trace-b: #5cb8f5; --trace-c: #b08cf0;
   --good: #49c189; --warn: #e3a64a; --bad: #f06a5e;
-  --sky: #1b2530; --floor-a: #3a3f45; --floor-b: #33383e; --pad: rgba(23,29,36,.82); --pad-ink: #e4e9ee;
+  --sky: #15202d; --floor-a: #2b3a50; --floor-b: #25324a; --pad: rgba(23,29,36,.82); --pad-ink: #e4e9ee;
   color-scheme: dark; }
 
 html, body { height: 100%; }
@@ -123,9 +123,11 @@ input[type=range] { width: 100%; accent-color: var(--pla); }
 select { border: 1px solid var(--line); background: var(--card); border-radius: 6px; padding: 4px 6px; width: 100%; }
 .diag { font-family: var(--f-mono); font-size: 12px; display: grid; grid-template-columns: 1fr auto; row-gap: 2px; font-variant-numeric: tabular-nums; }
 .diag .bad { color: var(--bad); } .diag .warn { color: var(--warn); }
-.brand .tag { color: var(--accent, #d9692a); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .1em; margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--line); }
+.brand .tag { color: var(--pla); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .1em; margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--line); }
 @media (max-width: 700px) { .brand .tag { display: block; margin: 2px 0 0; padding: 0; border: 0; } }
-.toplinks { display: flex; gap: 14px; margin-left: 6px; }
+.themebtn { border: 1px solid var(--line); background: var(--card); color: var(--ink); width: 30px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1; }
+.themebtn:hover { border-color: var(--pla); }
+.toplinks { align-items: center; display: flex; gap: 14px; margin-left: 6px; }
 .toplinks a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; border-bottom: 1px solid transparent; }
 .toplinks a:hover { color: var(--ink); border-bottom-color: currentColor; }
 .about p { margin: 0 0 8px; font-size: 12.5px; color: var(--muted); }
@@ -150,7 +152,7 @@ select { border: 1px solid var(--line); background: var(--card); border-radius: 
     <span id="status" class="chip good">Balancing</span>
     <span class="spacer"></span>
     <span class="clock" id="clock">t 0.0 s · ×1</span>
-    <nav class="toplinks"><a href="https://github.com/aamna-builds/Bo-Bot" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/aamna-builds/Bo-Bot/blob/main/docs/equations.md" target="_blank" rel="noopener">Equations</a></nav>
+    <nav class="toplinks"><button class="themebtn" id="themeBtn" title="Switch light / dark mode" aria-label="Switch light or dark mode">◐</button><a href="https://github.com/aamna-builds/Bo-Bot" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/aamna-builds/Bo-Bot/blob/main/docs/equations.md" target="_blank" rel="noopener">Equations</a></nav>
   </header>
 
   <main class="stage" id="stage">
@@ -271,26 +273,26 @@ function rng(seed) {
 const COMPONENTS = [
   ["motor_L", 11.5, [0, 18, 0], [12, 32, 10], "#9a9aa4", "motor"],
   ["motor_R", 11.5, [0, -18, 0], [12, 32, 10], "#9a9aa4", "motor"],
-  ["motor_clamps", 10.0, [0, 0, 1.0], [16, 64, 12], "#e8893c", "frame"],
-  ["deck1", 9.0, [0, 0, 6.5], [45, 68, 3], "#e8893c", "frame"],
-  ["battery", 54.0, [0, 0, 14.0], [37, 68, 12], "#3c78c8", "power"],
+  ["motor_clamps", 10.0, [0, 0, 1.0], [16, 64, 12], "#2f7fe6", "frame"],
+  ["deck1", 9.0, [0, 0, 6.5], [45, 68, 3], "#2f7fe6", "frame"],
+  ["battery", 54.0, [0, 0, 14.0], [37, 68, 12], "#1d3566", "power"],
   ["xt30_leads", 4.0, [-20, 30, 14], [8, 10, 8], "#e6c828", "power"],
   ["pillars_1", 6.0, [0, 0, 15.5], [40, 66, 15], "#dcdce1", "posts"],
-  ["deck2", 9.0, [0, 0, 24.5], [50, 80, 3], "#e8893c", "frame"],
+  ["deck2", 9.0, [0, 0, 24.5], [50, 80, 3], "#2f7fe6", "frame"],
   ["esp32", 9.5, [6, 0, 32.0], [28, 51, 11], "#2a2a30", "elec"],
   ["mpu6050", 2.0, [-16, 0, 27.5], [16, 21, 3], "#1e5aaa", "mpu"],
   ["drv8833", 2.0, [-16, 20, 28.0], [16, 18, 4], "#c82828", "elec"],
   ["buck_5v", 5.0, [-16, -21, 30.0], [17, 26, 8], "#1e6e3c", "elec"],
   ["pillars_2", 6.0, [0, 0, 38.5], [44, 74, 25], "#dcdce1", "posts"],
-  ["deck3", 9.0, [0, 0, 52.5], [50, 80, 3], "#e8893c", "frame"],
+  ["deck3", 9.0, [0, 0, 52.5], [50, 80, 3], "#2f7fe6", "frame"],
   ["breadboard", 9.0, [-5, 0, 58.8], [35, 47, 9.5], "#ebebeb", "elec"],
-  ["oled_mount", 6.0, [20, 0, 70.0], [6, 40, 36], "#e8893c", "frame"],
+  ["oled_mount", 6.0, [20, 0, 70.0], [6, 40, 36], "#2f7fe6", "frame"],
   ["oled", 6.0, [25, 0, 72.0], [4, 35.4, 33.5], "#101216", "oled"],
   ["jumper_wires", 15.0, [0, 0, 35.0], [40, 60, 40], "#c83cc8", "hidden"],
   ["m3_screws", 8.0, [0, 0, 25.0], [44, 74, 50], "#b4b4b4", "hidden"],
-  ["shell_lower", 10.0, [0, 0, 12.0], [62, 68, 16], "#f3e6d4", "shell"],
-  ["shell_upper", 48.0, [0, 0, 59.0], [62, 86, 78], "#f3e6d4", "shell"],
-  ["ears", 5.0, [0, 0, 104.0], [20, 70, 14], "#f4c4cf", "shell"],
+  ["shell_lower", 10.0, [0, 0, 12.0], [62, 68, 16], "#78b0f6", "shell"],
+  ["shell_upper", 48.0, [0, 0, 59.0], [62, 86, 78], "#78b0f6", "shell"],
+  ["ears", 5.0, [0, 0, 104.0], [20, 70, 14], "#6fa9f0", "shell"],
   ["bow_tie", 3.0, [33, 0, 30.0], [4, 30, 12], "#d22a44", "shell"],
 ];
 
@@ -845,7 +847,7 @@ function buildRobot() {
         for (const sy of [-1, 1]) {
           const piv = new THREE.Group(); piv.position.copy(S2T(mm(c[0]), mm(sy * 22), mm(c[2] - 6)));
           const tri = triPrism([[-9.5, 0], [9.5, 0], [sy * -2, 20]], 9, color);
-          const inner = triPrism([[-5, 0.6], [5, 0.6], [sy * -1.2, 13]], 9.6, "#e58aa0");
+          const inner = triPrism([[-5, 0.6], [5, 0.6], [sy * -1.2, 13]], 9.6, "#dbeaff");
           piv.add(tri, inner); piv.userData.side = sy; piv.userData.base = sy * 0.12;
           piv.rotation.x = piv.userData.base; add(piv); ears.push(piv);
         }
@@ -1186,7 +1188,19 @@ recBtn.addEventListener("click", () => {
   rec.start(); recBtn.classList.add("on"); recBtn.innerHTML = "&#9632; Stop &amp; save";
 });
 
-// theme follows the viewer
+// theme: follows the viewer's system setting until the toggle is used, then remembers the choice
+(function () {
+  const root = document.documentElement, btn = $("themeBtn");
+  const dark = () => root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  try { const t = localStorage.getItem("bobot-theme"); if (t === "light" || t === "dark") root.dataset.theme = t; } catch (e) {}
+  const label = () => { btn.textContent = dark() ? "☀" : "☾"; btn.title = dark() ? "Switch to light mode" : "Switch to dark mode"; };
+  btn.addEventListener("click", () => {
+    const t = dark() ? "light" : "dark"; root.dataset.theme = t;
+    try { localStorage.setItem("bobot-theme", t); } catch (e) {}
+    label();
+  });
+  label();
+})();
 const mq = window.matchMedia("(prefers-color-scheme: dark)");
 mq.addEventListener?.("change", applyTheme);
 new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });

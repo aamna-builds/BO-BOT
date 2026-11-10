@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/images/banner.svg" alt="BO-BOT: Self-Balancing Cat Robot" width="100%">
+<img src="docs/images/banner.png" alt="BO-BOT: Self-Balancing Cat Robot" width="100%">
 
 <br>
 
