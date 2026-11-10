@@ -1,5 +1,8 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Balance Bot Bench</title>
+<title>BO-BOT · Balance Bench</title>
+<meta name="description" content="Browser simulator for BO-BOT, a self-balancing cat robot: drive it, push it, tune the ESP32 controller gains live.">
+<meta name="theme-color" content="#d9692a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d9692a'/%3E%3Ccircle cx='11' cy='14' r='3.2' fill='%23fff'/%3E%3Ccircle cx='21' cy='14' r='3.2' fill='%23fff'/%3E%3Cpath d='M11 22q5 4 10 0' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap">
 <style>
@@ -120,6 +123,13 @@ input[type=range] { width: 100%; accent-color: var(--pla); }
 select { border: 1px solid var(--line); background: var(--card); border-radius: 6px; padding: 4px 6px; width: 100%; }
 .diag { font-family: var(--f-mono); font-size: 12px; display: grid; grid-template-columns: 1fr auto; row-gap: 2px; font-variant-numeric: tabular-nums; }
 .diag .bad { color: var(--bad); } .diag .warn { color: var(--warn); }
+.brand .tag { color: var(--accent, #d9692a); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .1em; margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--line); }
+@media (max-width: 700px) { .brand .tag { display: block; margin: 2px 0 0; padding: 0; border: 0; } }
+.toplinks { display: flex; gap: 14px; margin-left: 6px; }
+.toplinks a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; border-bottom: 1px solid transparent; }
+.toplinks a:hover { color: var(--ink); border-bottom-color: currentColor; }
+.about p { margin: 0 0 8px; font-size: 12.5px; color: var(--muted); }
+.about a { color: var(--ink); }
 .tips { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; display: grid; gap: 2px; }
 .note { color: var(--muted); font-size: 12px; margin: 0; }
 
@@ -136,10 +146,11 @@ select { border: 1px solid var(--line); background: var(--card); border-radius: 
 
 <div class="app">
   <header class="top">
-    <div class="brand">Balance Bot Bench<small>ESP32 · GA12-N20 6 V 300 rpm · 34 mm wheels · 2S 1000 mAh</small></div>
+    <div class="brand">BO-BOT<small class="tag">Balance Bench</small><small>ESP32 · GA12-N20 6 V 300 rpm · 34 mm wheels · 2S 1000 mAh</small></div>
     <span id="status" class="chip good">Balancing</span>
     <span class="spacer"></span>
     <span class="clock" id="clock">t 0.0 s · ×1</span>
+    <nav class="toplinks"><a href="https://github.com/aamna-builds/Bo-Bot" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/aamna-builds/Bo-Bot/blob/main/docs/equations.md" target="_blank" rel="noopener">Equations</a></nav>
   </header>
 
   <main class="stage" id="stage">
@@ -222,6 +233,12 @@ select { border: 1px solid var(--line); background: var(--card); border-radius: 
         <li>Slow sway back and forth: lower <b>kp_v</b> or <b>ki_v</b>.</li>
         <li>Falls when pushed: raise <b>kp</b> a little.</li>
       </ul>
+    </section>
+    <section class="sec about">
+      <h2>About this simulator</h2>
+      <p>The controller here is the same code as the ESP32 firmware (cascaded speed and angle loops, 200 Hz). The motors, gearbox backlash, battery and sensors are modelled from datasheet values.</p>
+      <p><b>Not yet checked on hardware.</b> Treat the gains as a starting point and re-tune on the real robot.</p>
+      <p><a href="https://github.com/aamna-builds/Bo-Bot" target="_blank" rel="noopener">Source, firmware, CAD and docs on GitHub</a></p>
     </section>
   </aside>
 </div>

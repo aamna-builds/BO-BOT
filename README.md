@@ -9,6 +9,8 @@ Mechanical design, electronics, firmware, simulation and documentation, all in o
 
 <br>
 
+**[▶ Try the live simulator](https://aamna-builds.github.io/Bo-Bot/)**
+
 [![CI](https://github.com/aamna-builds/Bo-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/aamna-builds/Bo-Bot/actions/workflows/ci.yml)
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 ![Controller](https://img.shields.io/badge/controller-ESP32-blue)
@@ -67,7 +69,8 @@ The earlier [thermocol casing version](docs/images/design-sheet-thermocol.png) i
 ## Simulation
 
 A browser-based 3D simulator lets you drive the robot, push it, tune the controller gains live and record video.
-Open [`simulation/web/index.html`](simulation/web/index.html) in Chrome or Edge, no install needed.
+**Live simulator: [aamna-builds.github.io/Bo-Bot](https://aamna-builds.github.io/Bo-Bot/)** (opens in any modern browser, nothing to install).
+Or run it offline by opening [`simulation/web/index.html`](simulation/web/index.html) in Chrome or Edge.
 Details are in [`simulation/README.md`](simulation/README.md).
 
 <p align="center">
