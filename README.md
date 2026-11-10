@@ -173,3 +173,4 @@ The full parts list with sizes and sources is in [`components/`](components/).
 ## Gallery
 
 Build photos, renders and demo videos will appear here as the project progresses. See [`media/`](media/).
+
