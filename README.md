@@ -55,23 +55,41 @@ close to the axle, drivers and sensors sit on the middle platform, and the ESP32
   <img src="docs/images/concept-sketch.png" alt="BO-BOT concept sketches" width="95%">
 </p>
 
-**Design sheet (3D-printed shell version):** dimensions, internal layout, components and system block diagram.
+**Engineering drawings (A3, third angle):** the sizes come straight from the Fusion 360 script in [`cad/`](cad/), so the drawings
+and the CAD model agree. The picture is the first sheet; click it for full size.
 
 <p align="center">
-  <img src="docs/images/design-sheet-3d-print.png" alt="BO-BOT design sheet, 3D-printed shell" width="95%">
+  <a href="docs/drawings/sheet1-general-arrangement.png"><img src="docs/drawings/sheet1-general-arrangement.png" alt="Sheet 1: general arrangement, section, side and top views, parts list" width="95%"></a><br>
+  <sub>Sheet 1: general arrangement (section A-A, side view, top view, OLED window detail, parts list).</sub>
 </p>
 
-The earlier [thermocol casing version](docs/images/design-sheet-thermocol.png) is kept for reference.
+<p align="center">
+  <a href="docs/drawings/sheet2-electronics.png"><img src="docs/drawings/sheet2-electronics.png" alt="Sheet 2: electronics layout, block diagram and pin map" width="95%"></a><br>
+  <sub>Sheet 2: electronics layout on the three platforms, system block diagram and pin map.</sub>
+</p>
 
-> The sheets above were drawn for a 0.96" display. The build uses a **1.3" SH1106 OLED**, and the CAD model
-> (`cad/`) has been updated for it.
+The sheets are drawn by [`docs/drawings/draw_sheets.py`](docs/drawings/draw_sheets.py); change a number there and run it to redraw them.
+The first picture-style design sheets (drawn for a 0.96" display, with the thermocol casing) are kept in
+[`docs/images/archive/`](docs/images/archive/). The build uses a **1.3" SH1106 OLED**, and the CAD model and these drawings are
+for that display.
 
 ## Simulation
 
-A browser-based 3D simulator lets you drive the robot, push it, tune the controller gains live and record video.
-**Live simulator: [aamna-builds.github.io/Bo-Bot](https://aamna-builds.github.io/Bo-Bot/)** (opens in any modern browser, nothing to install).
-Or run it offline by opening [`simulation/web/index.html`](simulation/web/index.html) in Chrome or Edge.
-Details are in [`simulation/README.md`](simulation/README.md).
+**[▶ Open the live simulator](https://aamna-builds.github.io/Bo-Bot/)** (any modern browser, nothing to install; it also works offline by
+opening [`simulation/web/index.html`](simulation/web/index.html)).
+
+A 3D bench model of the robot running the **same control law as the ESP32 firmware** (cascaded speed and angle loops at 200 Hz), with the
+motors, gearbox backlash, battery, MPU-6050 and encoders modelled from datasheet values.
+
+- **Drive and push it:** arrow keys or the on-screen pad to drive and turn, `X` / `Z` to shove it, `R` to pick it up and set it back down.
+- **Tune it live:** sliders for every firmware gain (kp, kd, ki, kp_v, ki_v, trim, ...) in the firmware's own units, plus a "tuned defaults" reset.
+- **Break it on purpose:** change backlash, move the MPU to another deck, add tilt error or extra weight, or run the battery down to 15 %.
+- **Look inside:** toggle the cat shell and an X-ray view; the OLED face reacts to what the robot is doing.
+- **Read the traces:** live pitch, motor PWM and speed plots, three camera modes, and a record button that saves a video.
+- **Light or dark mode:** the toggle is in the top corner.
+
+Details and the offline video recorder are in [`simulation/README.md`](simulation/README.md). The maths behind it is in
+[`docs/equations.md`](docs/equations.md) and [`simulink/`](simulink/).
 
 <p align="center">
   <img src="media/videos/simulation-demo.gif" alt="Simulation demo" width="60%"><br>
@@ -138,7 +156,7 @@ Each folder has its own README describing what belongs there.
 | CAD | Export `.f3d` / `.step` and renders | In progress |
 | CAD | Alternative body and layout designs | Planned |
 | Simulation | Rough web simulator with live gain tuning and video recording | Prototype done |
-| Maths | Linear model, stability analysis and graphs ([equations](docs/equations.md), [`simulink/`](simulink/)) | Done in Python; MATLAB and Simulink files written, not yet run |
+| Maths | Linear model, stability analysis and graphs ([equations](docs/equations.md), [`simulink/`](simulink/)) | Done in Python; MATLAB analysis run and checked (R2025b); Simulink model build not yet run |
 | Simulation | Controller tuning and validation against hardware | Planned |
 | Electronics | Final component selection and wiring pin map | Pin map done |
 | Firmware | IMU filter, balance controller, motor and encoder drivers | Written, not yet run on hardware |
