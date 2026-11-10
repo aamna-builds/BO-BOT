@@ -38,7 +38,7 @@ The maths behind the balance controller, with graphs. The full derivation is in 
 
 ## Run it
 
-**MATLAB** (R2018b or newer, Control System Toolbox):
+**MATLAB** (R2018b or newer; no extra toolbox needed for `bobot_analysis`, Simulink for `build_bobot_model`):
 1. Open the `simulink` folder in MATLAB.
 2. Run `bobot_analysis`. It prints a **SELF-CHECK** that compares its numbers with the Python results (poles, margins, stable gain range) and saves figures in `results_matlab/`. You want to see `SELF-CHECK PASSED`.
 3. Run `build_bobot_model`. It builds `bobot_balance.slx`, runs it, prints a **SIMULINK CHECK**, and saves a screenshot of the model and the result graph in `results_matlab/`.
@@ -48,5 +48,6 @@ The maths behind the balance controller, with graphs. The full derivation is in 
 
 ## Status
 - **Checked:** the Python calculation and all the graphs. The linear model agrees with the nonlinear simulator for the speed response and for the time scale of tilt recovery (see section 7 of [`docs/equations.md`](../docs/equations.md) for the differences).
-- **Not checked:** the MATLAB scripts and the Simulink builder have **not been run in MATLAB** yet. They are written to give the same numbers as the Python version, and the self-checks above will tell you if they do. If a check says FAIL or MATLAB shows an error, send me the output and I will fix it.
+- **Checked in MATLAB R2025b:** `bobot_analysis` ran and printed `SELF-CHECK PASSED` (open-loop and closed-loop poles, both phase margins, and the stable kp range 16.5 to 121 all match the Python results).
+- **Not checked yet:** `build_bobot_model` (the Simulink builder) has not finished a run, so `bobot_balance.slx` and the real model screenshot are not in the repo yet. Run it as in step 3 and send me the SIMULINK CHECK output if it shows FAIL or an error.
 - **After your first successful run:** commit the generated `bobot_balance.slx` and the pictures from `results_matlab/` (these replace the drawn diagram with a real screenshot), and write your MATLAB version here.
