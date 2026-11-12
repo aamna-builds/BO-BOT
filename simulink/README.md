@@ -23,6 +23,15 @@ The maths behind the balance controller, with graphs. The full derivation is in 
 
 *This picture shows the model that `build_bobot_model.m` builds: the linear plant, the speed loop and angle loop with the firmware gains, the PWM limit and the control delay. After you run the script in MATLAB it also saves a real screenshot of the model in `results_matlab/`.*
 
+## Results from MATLAB
+
+| | |
+|---|---|
+| ![model](results_matlab/bobot_balance_model.png) | ![response](results_matlab/bobot_balance_simulink_results.png) |
+| The Simulink model | Response: start 3 deg off, speed command 0.2 m/s at 0.5 s |
+| ![open loop poles](results_matlab/open_loop_poles.png) | ![closed loop poles](results_matlab/closed_loop_poles.png) |
+| Open-loop poles (one unstable) | Closed-loop poles with the firmware gains |
+
 ## All graphs
 
 | | |
@@ -49,5 +58,5 @@ The maths behind the balance controller, with graphs. The full derivation is in 
 ## Status
 - **Checked:** the Python calculation and all the graphs. The linear model agrees with the nonlinear simulator for the speed response and for the time scale of tilt recovery (see section 7 of [`docs/equations.md`](../docs/equations.md) for the differences).
 - **Checked in MATLAB R2025b:** `bobot_analysis` ran and printed `SELF-CHECK PASSED` (open-loop and closed-loop poles, both phase margins, and the stable kp range 16.5 to 121 all match the Python results).
-- **Not checked yet:** `build_bobot_model` (the Simulink builder) has not finished a run, so `bobot_balance.slx` and the real model screenshot are not in the repo yet. Run it as in step 3 and send me the SIMULINK CHECK output if it shows FAIL or an error.
-- **After your first successful run:** commit the generated `bobot_balance.slx` and the pictures from `results_matlab/` (these replace the drawn diagram with a real screenshot), and write your MATLAB version here.
+- **Simulink model built and run in MATLAB (screenshots from the author's laptop):** the model builds and runs. Starting 3 degrees off balance, the pitch oscillation dies out in about 0.6 s, then the speed follows the 0.2 m/s command with no overshoot and settles in about 3 s (PWM settles near 65 of 255). All closed-loop poles are in the left half plane, and the open-loop model has the one unstable pole expected for an inverted pendulum. Pictures are in [`results_matlab/`](results_matlab/).
+- **Still to add:** the `bobot_balance.slx` file itself and the MATLAB version used.

@@ -156,7 +156,7 @@ Each folder has its own README describing what belongs there.
 | CAD | Export `.f3d` / `.step` and renders | In progress |
 | CAD | Alternative body and layout designs | Planned |
 | Simulation | Rough web simulator with live gain tuning and video recording | Prototype done |
-| Maths | Linear model, stability analysis and graphs ([equations](docs/equations.md), [`simulink/`](simulink/)) | Done in Python; MATLAB analysis run and checked (R2025b); Simulink model build not yet run |
+| Maths | Linear model, stability analysis and graphs ([equations](docs/equations.md), [`simulink/`](simulink/)) | Done in Python; MATLAB analysis run and checked (R2025b); Simulink model built and run, results in [`simulink/`](simulink/) |
 | Simulation | Controller tuning and validation against hardware | Planned |
 | Electronics | Final component selection and wiring pin map | Pin map done |
 | Firmware | IMU filter, balance controller, motor and encoder drivers | Written, not yet run on hardware |
