@@ -161,6 +161,7 @@ Each folder has its own README describing what belongs there.
 | Electronics | Final component selection and wiring pin map | Pin map done |
 | Firmware | IMU filter, balance controller, motor and encoder drivers | Written, not yet run on hardware |
 | Firmware | OLED face animations | Written, not yet run on hardware |
+| Hardware | Components delivery | Waiting for parts to arrive |
 | Hardware | Thermocol casing build | Planned |
 | Media | Build photos and demo video | Planned |
 
