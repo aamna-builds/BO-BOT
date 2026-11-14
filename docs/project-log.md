@@ -12,7 +12,7 @@
 | 2026-11-10 | Repository moved to `Bo-Bot`; live simulator published on GitHub Pages. Simulator pick-up bug fixed (a push survived a reset). MATLAB analysis script made to run without the Control System Toolbox and checked in R2025b. |
 | 2026-11-11 | Simulator recoloured blue with a dark mode toggle; new banner. Design sheets redrawn as A3 engineering drawings (general arrangement and electronics). Demo video and GIF re-recorded. |
 | 2026-11-12 | Simulink model built and run in MATLAB: 3 degree tilt recovers in about 0.6 s, speed step settles in about 3 s. Screenshots and graphs added to `simulink/results_matlab/`. |
-| 2026-11-13 | Project progress report written and submitted. Components still on order. |
+| 2026-11-13 | Project progress report written. Components still on order. |
 
 ## To-do
 - [ ] Run CAD script in Fusion 360 and export `.f3d` / `.step` to `cad/exports/`
