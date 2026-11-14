@@ -33,3 +33,14 @@
 
 ## Datasheets
 Put PDFs in [`datasheets/`](datasheets/).
+
+## Photos of the parts (arrived 14 Nov 2026)
+
+| | | |
+|---|---|---|
+| ![wheels](../media/images/parts/wheels.jpg) | ![OLED](../media/images/parts/oled-1.3in.jpg) | ![motors](../media/images/parts/n20-motors-with-encoder.jpg) |
+| Wheels (34 mm) | 1.3" OLED | N20 motors with encoders |
+| ![DRV8833](../media/images/parts/drv8833-motor-driver.jpg) | ![MPU-6050](../media/images/parts/mpu6050.jpg) | ![buck](../media/images/parts/buck-module-1.jpg) |
+| DRV8833 motor driver (headers not soldered yet) | MPU-6050 (headers not soldered yet) | Buck converter (USB-A output) |
+| ![charger](../media/images/parts/balance-charger-1.jpg) | ![XT30](../media/images/parts/xt30-connectors.jpg) | |
+| IMAX B3 Pro balance charger | XT30 connectors | |
