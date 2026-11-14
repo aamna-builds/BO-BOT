@@ -13,6 +13,7 @@
 | 2026-11-11 | Simulator recoloured blue with a dark mode toggle; new banner. Design sheets redrawn as A3 engineering drawings (general arrangement and electronics). Demo video and GIF re-recorded. |
 | 2026-11-12 | Simulink model built and run in MATLAB: 3 degree tilt recovers in about 0.6 s, speed step settles in about 3 s. Screenshots and graphs added to `simulink/results_matlab/`. |
 | 2026-11-13 | Project progress report written. Components still on order. |
+| 2026-11-14 | Components arrived: wheels, N20 motors with encoders, 1.3" OLED, DRV8833 driver, MPU-6050, buck module, balance charger and XT30 connectors. Photos added to `components/`. Battery and ESP32 still to confirm. |
 
 ## To-do
 - [ ] Run CAD script in Fusion 360 and export `.f3d` / `.step` to `cad/exports/`
